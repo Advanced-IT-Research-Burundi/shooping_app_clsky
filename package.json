@@ -30,6 +30,7 @@
             "@radix-ui/react-toggle-group": "^1.1.2",
             "@radix-ui/react-tooltip": "^1.1.8",
             "@tailwindcss/vite": "^4.1.18",
+            "axios": "^1.13.2",
             "class-variance-authority": "^0.7.1",
             "clsx": "*",
             "cmdk": "^1.1.1",
@@ -50,7 +51,9 @@
             "vaul": "^1.1.2"
       },
       "devDependencies": {
+            "@tailwindcss/postcss": "^4.1.18",
             "@vitejs/plugin-react-swc": "^3.10.2",
+            "autoprefixer": "^10.4.23",
             "vite": "6.3.5",
             "vite-plugin-pwa": "^1.2.0"
       },
