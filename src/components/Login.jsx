@@ -1,31 +1,51 @@
 import { useState } from "react";
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
-import { ShoppingBag, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { login as apiLogin } from '../api/axios';
+import { setCredentials } from '../features/auth/authSlice';
 
 export function Login({ onLogin }) {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+
+    try {
+      const res = await apiLogin(email, password);
+      if (res.success) {
+        const { user, token } = res;
+        dispatch(setCredentials({ user, token }));
+        if (onLogin) onLogin(user);
+        navigate('/');
+      } else {
+        setError(res.error || 'Authentication failed');
+      }
+    } catch (err) {
+      setError(err?.message || 'Erreur inconnue');
+    } finally {
       setIsLoading(false);
-      onLogin({ email, name: "User" });
-    }, 1500);
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <Card className="w-full max-w-md shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-        <CardHeader className="space-y-1 flex flex-col items-center pb-8">
-          <div className="w-24 h-24 mb-4 flex items-center justify-center">
-            <img src="/logo.png" alt="CL SKY Logo" className="w-full h-full object-contain" />
+    <div className="flex items-center justify-center min-h-screen p-4 bg-gray-50">
+      <Card className="w-full max-w-md border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+        <CardHeader className="flex flex-col items-center pb-8 space-y-1">
+          <div className="flex items-center justify-center w-24 h-24 mb-4">
+            <img src="/logo.png" alt="CL SKY Logo" className="object-contain w-full h-full" />
           </div>
           <CardTitle className="text-2xl font-bold tracking-tight text-center">
             Welcome Back
@@ -59,16 +79,17 @@ export function Login({ onLogin }) {
                 className="h-11 focus-visible:ring-orange-500"
               />
             </div>
+            {error && <p className="text-sm text-red-600">{error}</p>}
           </CardContent>
           <CardFooter className="flex flex-col gap-4 mt-2">
             <Button 
-              className="w-full h-11 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 transition-all duration-300 shadow-md hover:shadow-lg text-white font-medium" 
+              className="w-full font-medium text-white transition-all duration-300 shadow-md h-11 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 hover:shadow-lg" 
               type="submit" 
               disabled={isLoading}
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Signing in...
                 </>
               ) : (

@@ -6,20 +6,20 @@ export function Home({ products, onAddClick, onProductClick }) {
       {
     /* Header */
   }
-      <div className="bg-orange-500 text-gray-900 px-6 pt-12 pb-8 shadow-sm">
+      <div className="px-6 pt-12 pb-8 text-gray-900 bg-orange-500 shadow-sm">
         <div className="flex flex-col items-center mb-6">
-          <h1 className="text-3xl text-orange-600 font-bold">CL SKY</h1>
+          <h1 className="text-3xl font-bold text-white">CL SKY</h1>
         </div>
-        <p className="text-gray-500 text-center">Gérez vos produits facilement</p>
+        <p className="text-center text-white">Gérez vos produits facilement</p>
       </div>
 
       {
     /* Stats Cards */
   }
-      <div className="px-6 -mt-6 grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-white rounded-2xl p-5 shadow-md border-b-4 border-orange-500">
+      <div className="grid grid-cols-2 gap-4 px-6 mb-6 -mt-6">
+        <div className="p-5 bg-white border-b-4 border-orange-500 shadow-md rounded-2xl">
           <div className="flex items-center gap-3 mb-2">
-            <div className="bg-orange-100 p-2 rounded-xl">
+            <div className="p-2 bg-orange-100 rounded-xl">
               <Package className="w-5 h-5 text-orange-600" />
             </div>
           </div>
@@ -27,9 +27,9 @@ export function Home({ products, onAddClick, onProductClick }) {
           <div className="text-sm text-gray-500">Produits</div>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 shadow-md border-b-4 border-green-500">
+        <div className="p-5 bg-white border-b-4 border-green-500 shadow-md rounded-2xl">
           <div className="flex items-center gap-3 mb-2">
-            <div className="bg-green-100 p-2 rounded-xl">
+            <div className="p-2 bg-green-100 rounded-xl">
               <DollarSign className="w-5 h-5 text-green-600" />
             </div>
           </div>
@@ -44,7 +44,7 @@ export function Home({ products, onAddClick, onProductClick }) {
       <div className="px-6 mb-6">
         <button
     onClick={onAddClick}
-    className="w-full bg-orange-600 text-white rounded-2xl p-5 shadow-lg flex items-center justify-center gap-3 active:scale-95 transition-transform hover:bg-orange-700"
+    className="flex items-center justify-center w-full gap-3 p-5 text-white transition-transform bg-orange-600 shadow-lg rounded-2xl active:scale-95 hover:bg-orange-700"
   >
           <Plus className="w-6 h-6" />
           <span className="text-lg">Ajouter un achat</span>
@@ -64,12 +64,12 @@ export function Home({ products, onAddClick, onProductClick }) {
           {products.slice(0, 5).map((product) => <div
     key={product.id}
     onClick={() => onProductClick(product.id)}
-    className="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-4 active:scale-98 transition-transform"
+    className="flex items-center gap-4 p-4 transition-transform bg-white shadow-sm rounded-2xl active:scale-98"
   >
               <img
     src={product.photo}
     alt={product.name}
-    className="w-16 h-16 rounded-xl object-cover"
+    className="object-cover w-16 h-16 rounded-xl"
   />
               <div className="flex-1 min-w-0">
                 <h3 className="text-gray-900 truncate">{product.name}</h3>
@@ -82,12 +82,12 @@ export function Home({ products, onAddClick, onProductClick }) {
             </div>)}
         </div>
 
-        {products.length === 0 && <div className="text-center py-12">
-            <div className="bg-gray-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+        {products.length === 0 && <div className="py-12 text-center">
+            <div className="flex items-center justify-center w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full">
               <ShoppingBag className="w-10 h-10 text-gray-400" />
             </div>
             <p className="text-gray-500">Aucun achat enregistré</p>
-            <p className="text-sm text-gray-400 mt-1">Commencez par ajouter votre premier produit</p>
+            <p className="mt-1 text-sm text-gray-400">Commencez par ajouter votre premier produit</p>
           </div>}
       </div>
     </div>;
