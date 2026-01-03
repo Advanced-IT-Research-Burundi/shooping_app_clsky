@@ -6,9 +6,8 @@ export function Home({ products, onAddClick, onProductClick }) {
       {
     /* Header */
   }
-      <div className="bg-white text-gray-900 px-6 pt-12 pb-8 shadow-sm">
+      <div className="bg-orange-500 text-gray-900 px-6 pt-12 pb-8 shadow-sm">
         <div className="flex flex-col items-center mb-6">
-          <img src="/logo.png" alt="CL SKY Company" className="h-24 object-contain mb-4" />
           <h1 className="text-3xl text-orange-600 font-bold">CL SKY</h1>
         </div>
         <p className="text-gray-500 text-center">Gérez vos produits facilement</p>
