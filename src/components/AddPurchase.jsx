@@ -79,13 +79,13 @@ export function AddPurchase({ onSubmit, onCancel }) {
           {!photo ? <button
     type="button"
     onClick={() => fileInputRef.current?.click()}
-    className="w-full bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl p-8 flex flex-col items-center gap-3 active:scale-98 transition-transform shadow-lg"
+    className="w-full bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-2xl p-8 flex flex-col items-center gap-3 active:scale-98 transition-transform shadow-lg"
   >
               <div className="bg-white/20 p-4 rounded-full">
                 <Camera className="w-8 h-8" />
               </div>
               <span className="text-lg">Prendre une photo</span>
-              <span className="text-sm text-blue-100">ou télécharger une image</span>
+              <span className="text-sm text-orange-100">ou télécharger une image</span>
             </button> : <div className="relative">
               <img src={photo} alt="Product" className="w-full h-64 object-cover rounded-2xl" />
               <button
@@ -125,7 +125,7 @@ export function AddPurchase({ onSubmit, onCancel }) {
     value={name}
     onChange={(e) => setName(e.target.value)}
     placeholder="Ex: Smartphone Samsung"
-    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
   />
           </div>
 
@@ -136,7 +136,7 @@ export function AddPurchase({ onSubmit, onCancel }) {
     onChange={(e) => setDescription(e.target.value)}
     placeholder="Détails supplémentaires..."
     rows={3}
-    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
   />
           </div>
         </div>
@@ -154,7 +154,7 @@ export function AddPurchase({ onSubmit, onCancel }) {
     value={price}
     onChange={(e) => setPrice(e.target.value)}
     placeholder="0.00"
-    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
   />
             </div>
 
@@ -164,7 +164,7 @@ export function AddPurchase({ onSubmit, onCancel }) {
                 <select
     value={currency}
     onChange={(e) => setCurrency(e.target.value)}
-    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 appearance-none bg-white"
   >
                   {currencies.map((curr) => <option key={curr} value={curr}>{curr}</option>)}
                 </select>
@@ -181,13 +181,13 @@ export function AddPurchase({ onSubmit, onCancel }) {
     value={exchangeRate}
     onChange={(e) => setExchangeRate(e.target.value)}
     placeholder="2850"
-    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
   />
           </div>
 
-          <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+          <div className="bg-orange-50 rounded-xl p-4 border border-orange-100">
             <div className="text-sm text-gray-600 mb-1">Prix converti</div>
-            <div className="text-2xl text-blue-600">
+            <div className="text-2xl text-orange-600">
               {convertedPrice.toLocaleString("fr-FR", { maximumFractionDigits: 0 })} BIF
             </div>
           </div>
@@ -203,10 +203,10 @@ export function AddPurchase({ onSubmit, onCancel }) {
     key={pt.value}
     type="button"
     onClick={() => setType(pt.value)}
-    className={`p-4 rounded-2xl border-2 transition-all ${type === pt.value ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white"}`}
+    className={`p-4 rounded-2xl border-2 transition-all ${type === pt.value ? "border-orange-500 bg-orange-50" : "border-gray-200 bg-white"}`}
   >
                 <div className="text-3xl mb-1">{pt.icon}</div>
-                <div className={`text-sm ${type === pt.value ? "text-blue-600" : "text-gray-700"}`}>
+                <div className={`text-sm ${type === pt.value ? "text-orange-600" : "text-gray-700"}`}>
                   {pt.label}
                 </div>
               </button>)}
@@ -224,7 +224,7 @@ export function AddPurchase({ onSubmit, onCancel }) {
     key={pkg.value}
     type="button"
     onClick={() => setPackaging(pkg.value)}
-    className={`py-3 px-2 rounded-xl border-2 text-sm transition-all ${packaging === pkg.value ? "border-blue-500 bg-blue-50 text-blue-600" : "border-gray-200 bg-white text-gray-700"}`}
+    className={`py-3 px-2 rounded-xl border-2 text-sm transition-all ${packaging === pkg.value ? "border-orange-500 bg-orange-50 text-orange-600" : "border-gray-200 bg-white text-gray-700"}`}
   >
                   {pkg.label}
                 </button>)}
@@ -239,7 +239,7 @@ export function AddPurchase({ onSubmit, onCancel }) {
     value={piecesPerCarton}
     onChange={(e) => setPiecesPerCarton(e.target.value)}
     placeholder="12"
-    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
   />
               </div>
               <div>
@@ -249,7 +249,7 @@ export function AddPurchase({ onSubmit, onCancel }) {
     value={numberOfCartons}
     onChange={(e) => setNumberOfCartons(e.target.value)}
     placeholder="10"
-    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
   />
               </div>
             </div>}
@@ -260,7 +260,7 @@ export function AddPurchase({ onSubmit, onCancel }) {
   }
         <button
     type="submit"
-    className="w-full bg-blue-600 text-white py-4 rounded-2xl shadow-lg active:scale-98 transition-transform text-lg"
+    className="w-full bg-orange-600 text-white py-4 rounded-2xl shadow-lg active:scale-98 transition-transform text-lg"
   >
           Enregistrer l'achat
         </button>

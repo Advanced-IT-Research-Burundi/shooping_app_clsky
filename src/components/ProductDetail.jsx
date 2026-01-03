@@ -38,7 +38,7 @@ export function ProductDetail({ product, onBack, onDelete, onEdit }) {
             <ArrowLeft className="w-6 h-6 text-gray-600" />
           </button>
           <h1 className="text-xl text-gray-900">Modifier</h1>
-          <button onClick={handleSaveEdit} className="text-blue-600 px-4 py-2 rounded-xl active:bg-blue-50 transition">
+          <button onClick={handleSaveEdit} className="text-orange-600 px-4 py-2 rounded-xl active:bg-orange-50 transition">
             Sauver
           </button>
         </div>
@@ -50,7 +50,7 @@ export function ProductDetail({ product, onBack, onDelete, onEdit }) {
       type="text"
       value={editedProduct.name}
       onChange={(e) => setEditedProduct({ ...editedProduct, name: e.target.value })}
-      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
     />
           </div>
 
@@ -60,7 +60,7 @@ export function ProductDetail({ product, onBack, onDelete, onEdit }) {
       value={editedProduct.description}
       onChange={(e) => setEditedProduct({ ...editedProduct, description: e.target.value })}
       rows={3}
-      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
     />
           </div>
 
@@ -72,7 +72,7 @@ export function ProductDetail({ product, onBack, onDelete, onEdit }) {
       step="0.01"
       value={editedProduct.price}
       onChange={(e) => setEditedProduct({ ...editedProduct, price: parseFloat(e.target.value) || 0 })}
-      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
     />
             </div>
 
@@ -90,7 +90,7 @@ export function ProductDetail({ product, onBack, onDelete, onEdit }) {
           convertedPrice: editedProduct.price * rate
         });
       }}
-      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
     />
             </div>
           </div>
@@ -142,10 +142,10 @@ export function ProductDetail({ product, onBack, onDelete, onEdit }) {
           {
     /* Price Info */
   }
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-4 mb-4">
+          <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-4 mb-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-gray-700">Prix d'achat</span>
-              <div className="text-2xl text-blue-600">
+              <div className="text-2xl text-orange-600">
                 {product.price} {product.currency}
               </div>
             </div>
@@ -163,7 +163,7 @@ export function ProductDetail({ product, onBack, onDelete, onEdit }) {
           <div className="grid grid-cols-2 gap-3">
             <button
     onClick={() => setIsEditing(true)}
-    className="flex items-center justify-center gap-2 bg-blue-600 text-white py-3 rounded-xl active:scale-95 transition-transform"
+    className="flex items-center justify-center gap-2 bg-orange-600 text-white py-3 rounded-xl active:scale-95 transition-transform"
   >
               <Edit className="w-5 h-5" />
               Modifier
@@ -185,8 +185,8 @@ export function ProductDetail({ product, onBack, onDelete, onEdit }) {
           <h2 className="text-lg text-gray-900 mb-4">Détails</h2>
 
           <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
-            <div className="bg-blue-100 p-3 rounded-xl">
-              <Package className="w-5 h-5 text-blue-600" />
+            <div className="bg-orange-100 p-3 rounded-xl">
+              <Package className="w-5 h-5 text-orange-600" />
             </div>
             <div>
               <div className="text-sm text-gray-500">Emballage</div>

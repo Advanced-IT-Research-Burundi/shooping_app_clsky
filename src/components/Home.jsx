@@ -2,30 +2,33 @@ import { Plus, ShoppingBag, DollarSign, Package } from "lucide-react";
 export function Home({ products, onAddClick, onProductClick }) {
   const totalProducts = products.length;
   const totalValue = products.reduce((sum, p) => sum + p.convertedPrice, 0);
-  return <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-50">
+  return <div className="min-h-screen bg-gray-50">
       {
     /* Header */
   }
-      <div className="bg-blue-600 text-white px-6 pt-12 pb-8 rounded-b-3xl shadow-lg">
-        <h1 className="text-3xl mb-2">Mes Achats</h1>
-        <p className="text-blue-100">Gérez vos produits facilement</p>
+      <div className="bg-white text-gray-900 px-6 pt-12 pb-8 shadow-sm">
+        <div className="flex flex-col items-center mb-6">
+          <img src="/logo.png" alt="CL SKY Company" className="h-24 object-contain mb-4" />
+          <h1 className="text-3xl text-orange-600 font-bold">CL SKY</h1>
+        </div>
+        <p className="text-gray-500 text-center">Gérez vos produits facilement</p>
       </div>
 
       {
     /* Stats Cards */
   }
       <div className="px-6 -mt-6 grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-white rounded-2xl p-5 shadow-md">
+        <div className="bg-white rounded-2xl p-5 shadow-md border-b-4 border-orange-500">
           <div className="flex items-center gap-3 mb-2">
-            <div className="bg-blue-100 p-2 rounded-xl">
-              <Package className="w-5 h-5 text-blue-600" />
+            <div className="bg-orange-100 p-2 rounded-xl">
+              <Package className="w-5 h-5 text-orange-600" />
             </div>
           </div>
           <div className="text-2xl text-gray-900">{totalProducts}</div>
           <div className="text-sm text-gray-500">Produits</div>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 shadow-md">
+        <div className="bg-white rounded-2xl p-5 shadow-md border-b-4 border-green-500">
           <div className="flex items-center gap-3 mb-2">
             <div className="bg-green-100 p-2 rounded-xl">
               <DollarSign className="w-5 h-5 text-green-600" />
@@ -42,7 +45,7 @@ export function Home({ products, onAddClick, onProductClick }) {
       <div className="px-6 mb-6">
         <button
     onClick={onAddClick}
-    className="w-full bg-blue-600 text-white rounded-2xl p-5 shadow-lg flex items-center justify-center gap-3 active:scale-95 transition-transform"
+    className="w-full bg-orange-600 text-white rounded-2xl p-5 shadow-lg flex items-center justify-center gap-3 active:scale-95 transition-transform hover:bg-orange-700"
   >
           <Plus className="w-6 h-6" />
           <span className="text-lg">Ajouter un achat</span>

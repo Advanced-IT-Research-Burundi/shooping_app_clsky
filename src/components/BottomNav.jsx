@@ -17,7 +17,7 @@ export function BottomNav({ currentScreen, onNavigate }) {
         onClick={() => onNavigate(item.id)}
         className="flex flex-col items-center justify-center relative"
       >
-                <div className="absolute -top-6 bg-blue-600 w-14 h-14 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform">
+                <div className="absolute -top-6 bg-orange-600 w-14 h-14 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform">
                   <Icon className="w-6 h-6 text-white" />
                 </div>
                 <div className="mt-6 text-xs text-gray-500">{item.label}</div>
@@ -26,7 +26,7 @@ export function BottomNav({ currentScreen, onNavigate }) {
     return <button
       key={item.id}
       onClick={() => onNavigate(item.id)}
-      className={`flex flex-col items-center justify-center gap-1 transition-colors ${isActive ? "text-blue-600" : "text-gray-400"}`}
+      className={`flex flex-col items-center justify-center gap-1 transition-colors ${isActive ? "text-orange-600" : "text-gray-400"}`}
     >
               <Icon className={`w-6 h-6 ${isActive ? "scale-110" : ""} transition-transform`} />
               <span className="text-xs">{item.label}</span>

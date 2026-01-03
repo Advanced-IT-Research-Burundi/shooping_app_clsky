@@ -1,10 +1,14 @@
 import { User, Settings, Bell, HelpCircle, LogOut, ChevronRight, Shield } from "lucide-react";
-export function Profile() {
+export function Profile({ user, onLogout }) {
+  // Default values if user is null (though should be provided by App)
+  const displayName = user?.name || "Commerçant";
+  const displayEmail = user?.email || "commercial@exemple.com";
+
   return <div className="min-h-screen bg-gray-50">
       {
     /* Header */
   }
-      <div className="bg-gradient-to-br from-blue-600 to-blue-700 text-white px-6 pt-12 pb-16">
+      <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white px-6 pt-12 pb-16">
         <h1 className="text-2xl mb-8">Profil</h1>
         
         {
@@ -15,8 +19,8 @@ export function Profile() {
             <User className="w-8 h-8" />
           </div>
           <div className="flex-1">
-            <h2 className="text-xl mb-1">Commerçant</h2>
-            <p className="text-blue-100 text-sm">commercial@exemple.com</p>
+            <h2 className="text-xl mb-1">{displayName}</h2>
+            <p className="text-orange-50 text-sm">{displayEmail}</p>
           </div>
         </div>
       </div>
@@ -73,6 +77,7 @@ export function Profile() {
     iconBg="bg-red-100"
     iconColor="text-red-600"
     showChevron={false}
+    onClick={onLogout}
   />
         </div>
 
@@ -85,8 +90,8 @@ export function Profile() {
       </div>
     </div>;
 }
-function MenuItem({ icon, label, iconBg, iconColor, showChevron = true }) {
-  return <button className="w-full flex items-center gap-4 p-4 active:bg-gray-50 transition">
+function MenuItem({ icon, label, iconBg, iconColor, showChevron = true, ...props }) {
+  return <button className="w-full flex items-center gap-4 p-4 active:bg-gray-50 transition" {...props}>
       <div className={`${iconBg} ${iconColor} p-2 rounded-xl`}>
         {icon}
       </div>
