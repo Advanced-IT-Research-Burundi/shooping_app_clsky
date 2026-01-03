@@ -103,10 +103,10 @@ export function ProductDetail({ product, onBack, onDelete, onEdit }) {
   }
       <div className="relative">
         <img
-    src={product.photo}
-    alt={product.name}
-    className="w-full h-80 object-cover"
-  />
+          src={Array.isArray(product.photo) ? (product.photo[0] || 'https://via.placeholder.com/640x480?text=No+Image') : product.photo}
+          alt={product.name}
+          className="w-full h-80 object-cover"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
         
         {
@@ -123,8 +123,8 @@ export function ProductDetail({ product, onBack, onDelete, onEdit }) {
     /* Type Badge */
   }
         <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-full flex items-center gap-2">
-          <span className="text-xl">{typeIcons[product.type]}</span>
-          <span className="text-sm text-gray-800">{typeLabels[product.type]}</span>
+          <span className="text-xl">{typeIcons[product.type] || typeIcons.other}</span>
+          <span className="text-sm text-gray-800">{typeLabels[product.type] || product.type}</span>
         </div>
       </div>
 

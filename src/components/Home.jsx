@@ -65,12 +65,13 @@ export function Home({ products, onAddClick, onProductClick }) {
     key={product.id}
     onClick={() => onProductClick(product.id)}
     className="flex items-center gap-4 p-4 transition-transform bg-white shadow-sm rounded-2xl active:scale-98"
-  >
+          >
+            
               <img
-    src={product.photo}
-    alt={product.name}
-    className="object-cover w-16 h-16 rounded-xl"
-  />
+                src={Array.isArray(product.photo) ? (product.photo[0] || 'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=800') : product.photo}
+                alt={product.name}
+                className="object-cover w-16 h-16 rounded-xl"
+              />
               <div className="flex-1 min-w-0">
                 <h3 className="text-gray-900 truncate">{product.name}</h3>
                 <p className="text-sm text-gray-500 capitalize">{product.type}</p>

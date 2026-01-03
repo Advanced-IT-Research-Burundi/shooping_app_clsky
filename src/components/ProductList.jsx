@@ -12,9 +12,24 @@ const typeLabels = {
   clothing: "V\xEAtements",
   other: "Autres"
 };
-export function ProductList({ products, onProductClick }) {
+import { useEffect, useRef, useCallback } from "react";
+
+export function ProductList({ products, onProductClick, onLoadMore, hasMore, isFetching }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("all");
+  
+  const observer = useRef();
+  const lastElementRef = useCallback(node => {
+    if (isFetching) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        if (onLoadMore) onLoadMore();
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [isFetching, hasMore, onLoadMore]);
+
   const filteredProducts = products.filter((product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) || product.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesFilter = filterType === "all" || product.type === filterType;
@@ -78,12 +93,12 @@ export function ProductList({ products, onProductClick }) {
   >
             <div className="relative aspect-square">
               <img
-    src={product.photo}
-    alt={product.name}
-    className="w-full h-full object-cover"
-  />
+                src={Array.isArray(product.photo) ? (product.photo[0] || 'https://via.placeholder.com/300?text=No+Image') : product.photo}
+                alt={product.name}
+                className="w-full h-full object-cover"
+              />
               <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs">
-                {typeIcons[product.type]}
+                {typeIcons[product.type] || typeIcons.other}
               </div>
               {product.packaging === "carton" && <div className="absolute top-2 left-2 bg-orange-500 text-white p-1.5 rounded-lg">
                   <Box className="w-4 h-4" />
@@ -104,6 +119,14 @@ export function ProductList({ products, onProductClick }) {
             </div>
           </div>)}
       </div>
+      
+      {/* Infinite Scroll Sentinel / Loading Indicator */}
+       {(hasMore || isFetching) && (
+          <div ref={lastElementRef} className="py-4 text-center text-gray-500">
+            {isFetching ? 'Chargement...' : 'Charger plus de produits'}
+          </div>
+       )}
+
 
       {filteredProducts.length === 0 && <div className="text-center py-12 px-6">
           <div className="bg-gray-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
