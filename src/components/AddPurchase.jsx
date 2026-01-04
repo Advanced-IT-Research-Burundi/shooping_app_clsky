@@ -12,7 +12,14 @@ const packagingTypes = [
   { value: "carton", label: "Carton" },
   { value: "other", label: "Autre" }
 ];
-export function AddPurchase({ onSubmit, onCancel }) {
+
+import { useOutletContext } from "react-router-dom";
+
+export function AddPurchase(props) {
+  const context = useOutletContext() || {};
+  const onSubmit = props.onSubmit || context.onSubmit;
+  const onCancel = props.onCancel || context.onCancel;
+  
   const [photo, setPhoto] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");

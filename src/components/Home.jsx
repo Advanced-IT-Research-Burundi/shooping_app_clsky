@@ -1,5 +1,11 @@
 import { Plus, ShoppingBag, DollarSign, Package } from "lucide-react";
-export function Home({ products, onAddClick, onProductClick }) {
+import { useOutletContext } from "react-router-dom";
+
+export function Home(props) {
+  const context = useOutletContext() || {};
+  const products = props.products || context.products || [];
+  const onAddClick = props.onAddClick || context.onAddClick;
+  const onProductClick = props.onProductClick || context.onProductClick;
   const totalProducts = products.length;
   const totalValue = products.reduce((sum, p) => sum + p.convertedPrice, 0);
   return <div className="min-h-screen bg-gray-50">

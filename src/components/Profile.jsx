@@ -1,5 +1,10 @@
 import { User, Settings, Bell, HelpCircle, LogOut, ChevronRight, Shield } from "lucide-react";
-export function Profile({ user, onLogout }) {
+import { useOutletContext } from "react-router-dom";
+
+export function Profile(props) {
+  const context = useOutletContext() || {};
+  const user = props.user || context.user;
+  const onLogout = props.onLogout || context.onLogout;
   // Default values if user is null (though should be provided by App)
   const displayName = user?.name || "Commerçant";
   const displayEmail = user?.email || "commercial@exemple.com";

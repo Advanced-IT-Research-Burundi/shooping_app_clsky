@@ -1,5 +1,7 @@
 import { ArrowLeft, Edit, Trash2, Package, Box, Calendar, DollarSign } from "lucide-react";
 import { useState } from "react";
+import { useParams, Navigate, useOutletContext } from "react-router-dom";
+
 const typeIcons = {
   food: "\u{1F34E}",
   electronics: "\u{1F4F1}",
@@ -17,10 +19,36 @@ const packagingLabels = {
   carton: "Carton",
   other: "Autre"
 };
-export function ProductDetail({ product, onBack, onDelete, onEdit }) {
+
+export function ProductDetail(props) {
+  const { id } = useParams();
+  const context = useOutletContext() || {};
+  
+  const products = props.products || context.products || [];
+  const onBack = props.onBack || context.onBack;
+  const onDelete = props.onDelete || context.onDelete;
+  const onEdit = props.onEdit || context.onEdit;
+
+  // Resolve product: either from props or find by ID from params
+  let product = props.product;
+  if (!product && id) {
+     product = products.find(p => p.id == id);
+  }
+
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  
+  // If we still don't have a product, it might be loading or invalid ID
+  // For now, if we have no product, we redirect to products list (or show loading)
+  if (!product) {
+      // If products list is empty, maybe they are still loading. Use fetching state if available?
+      // For safety, avoiding infinite redirect, just return null or loading.
+      if (products.length === 0) return <div className="p-6 text-center">Chargement...</div>;
+      return <Navigate to="/products" replace />;
+  }
+
   const [editedProduct, setEditedProduct] = useState(product);
+  
   const handleDelete = () => {
     onDelete(product.id);
   };

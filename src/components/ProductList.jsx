@@ -13,8 +13,15 @@ const typeLabels = {
   other: "Autres"
 };
 import { useEffect, useRef, useCallback } from "react";
+import { useOutletContext } from "react-router-dom";
 
-export function ProductList({ products, onProductClick, onLoadMore, hasMore, isFetching }) {
+export function ProductList(props) {
+  const context = useOutletContext() || {};
+  const products = props.products || context.products || [];
+  const onProductClick = props.onProductClick || context.onProductClick;
+  const onLoadMore = props.onLoadMore || context.onLoadMore;
+  const hasMore = props.hasMore !== undefined ? props.hasMore : context.hasMore;
+  const isFetching = props.isFetching !== undefined ? props.isFetching : context.isFetching;
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("all");
   
