@@ -43,10 +43,14 @@ export default function App() {
   };
 
   const handleAddProduct = (product) => {
-    // Ideally this should use the useAddProductMutation logic we added in AddPurchase
-    // But since AddPurchase now handles self-submission via API, we might just need to navigate back.
-    // The AddPurchase component calls onSubmit(product) on success.
-    // We just need to navigate here.
+    /* 
+       When a product is added, the API cache is invalidated via tags.
+       However, to ensure the UI shows the new product immediately at the top (Page 1),
+       we reset the page state to 1.
+       This triggers useGetProductsQuery(1), which matches the 'merge' logic for page 1 (replace cache),
+       ensuring a clean, fresh list.
+    */
+    setPage(1);
     navigate("/products");
   };
 

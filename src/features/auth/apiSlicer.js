@@ -2,6 +2,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 export const apiSlice = createApi({
   reducerPath: 'api',
+  tagTypes: ['Product'],
   baseQuery: fetchBaseQuery({
     baseUrl: import.meta.env.VITE_APP_URL || 'http://localhost/api',
     prepareHeaders: (headers, { getState }) => {
@@ -22,18 +23,31 @@ export const apiSlice = createApi({
       serializeQueryArgs: ({ endpointName }) => {
         return endpointName;
       },
+      // Provides tags for invalidation
+      providesTags: (result) => 
+        result
+          ? [
+              // Provides a specific tag for the List
+              { type: 'Product', id: 'LIST' },
+              // Optionally provide tags for each item if we want granular invalidation
+              ...result.data.map(({ id }) => ({ type: 'Product', id })),
+            ]
+          : [{ type: 'Product', id: 'LIST' }],
+      
       // Always merge incoming data to the cache entry
       merge: (currentCache, newItems) => {
-        // If the incoming page is 1, strictly replacing might be safer to handle "refresh" logic from the UI side,
-        // but typically standard infinite scroll just appends. 
-        // We will assume the user handles a "reset" by using a different approach or we just append.
-        // However, checking if meta.current_page === 1 is a good safeguard to replace instead of append.
         if (newItems.meta && newItems.meta.current_page === 1) {
+            // If page 1, replace everything (fresh load or reset)
             currentCache.data = newItems.data;
             currentCache.meta = newItems.meta;
             currentCache.links = newItems.links;
         } else {
-            currentCache.data.push(...newItems.data);
+            // If loading more pages (or refetching a subsequent page), merge safely
+            // We use a Map or Set to prevent duplicates if a page is refetched
+            const existingIds = new Set(currentCache.data.map(p => p.id));
+            const distinctNewItems = newItems.data.filter(p => !existingIds.has(p.id));
+            
+            currentCache.data.push(...distinctNewItems);
             currentCache.meta = newItems.meta;
             currentCache.links = newItems.links;
         }
