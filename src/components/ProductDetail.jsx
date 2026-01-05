@@ -1,4 +1,5 @@
 import { ArrowLeft, Edit, Trash2, Package, Box, Calendar, DollarSign, Upload, X, Save, Camera } from "lucide-react";
+import { SupplierSelect } from "./SupplierSelect";
 import { useState, useEffect, useRef } from "react";
 import { useParams, Navigate, useOutletContext } from "react-router-dom";
 import { useUpdateProductMutation } from "../features/auth/apiSlicer";
@@ -76,7 +77,9 @@ export function ProductDetail(props) {
             category_id: currentCategory.id,
             devise_id: currentDevise.id,
             piecesPerCarton: product.piecesPerCarton || "",
+            piecesPerCarton: product.piecesPerCarton || "",
             numberOfCartons: product.numberOfCartons || "",
+            supplier_id: product.supplier_id || "", 
         });
     }
   }, [product]);
@@ -122,7 +125,10 @@ export function ProductDetail(props) {
         formData.append('exchange_rate', editForm.exchange_rate);
         formData.append('date', editForm.date);
         formData.append('category_id', editForm.category_id);
+        formData.append('date', editForm.date);
+        formData.append('category_id', editForm.category_id);
         formData.append('devise_id', editForm.devise_id);
+        if(editForm.supplier_id) formData.append('supplier_id', editForm.supplier_id);
         
         // Append new photos
         // 'photos[]' or just 'photo' depending on backend. User said "ajouter plus des photos", usually 'photos' array.
@@ -206,6 +212,14 @@ export function ProductDetail(props) {
                         rows={3}
                         className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
                     />
+                </div>
+
+                {/* Supplier */}
+                <div className="bg-white rounded-xl shadow-sm">
+                     <SupplierSelect 
+                        value={editForm.supplier_id}
+                        onChange={(id) => setEditForm({...editForm, supplier_id: id})}
+                     />
                 </div>
 
                 {/* Price & Quantity & Date */}

@@ -14,6 +14,7 @@ const packagingTypes = [
 ];
 
 import { useOutletContext } from "react-router-dom";
+import { SupplierSelect } from "./SupplierSelect";
 
 export function AddPurchase(props) {
   const context = useOutletContext() || {};
@@ -30,6 +31,7 @@ export function AddPurchase(props) {
   const [packaging, setPackaging] = useState("unit");
   const [piecesPerCarton, setPiecesPerCarton] = useState("");
   const [numberOfCartons, setNumberOfCartons] = useState("");
+  const [supplierId, setSupplierId] = useState("");
   const fileInputRef = useRef(null);
   const convertedPrice = price && exchangeRate ? parseFloat(price) * parseFloat(exchangeRate) : 0;
   const handlePhotoCapture = (e) => {
@@ -57,7 +59,8 @@ export function AddPurchase(props) {
       convertedPrice,
       type,
       packaging,
-      photo
+      photo,
+      supplier_id: supplierId,
     };
     if (packaging === "carton") {
       product.piecesPerCarton = piecesPerCarton ? parseInt(piecesPerCarton) : void 0;
@@ -81,6 +84,14 @@ export function AddPurchase(props) {
         {
     /* Photo Section */
   }
+        {/* Supplier Section */}
+        <div className="bg-white rounded-2xl p-5 shadow-sm">
+             <SupplierSelect 
+                value={supplierId}
+                onChange={setSupplierId}
+             />
+        </div>
+
         <div className="space-y-3">
           <label className="text-sm text-gray-700">Photo du produit *</label>
           {!photo ? <button
