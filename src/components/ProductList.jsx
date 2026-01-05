@@ -66,7 +66,13 @@ export function ProductList(props) {
     placeholder="Rechercher un produit..."
     className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
   />
-        </div>
+      </div>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl text-gray-900">Fournisseurs</h1>
+        <button className="bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700 transition-colors">
+          Nouveau
+        </button>
+      </div>
 
         {
     /* Filter Chips */
