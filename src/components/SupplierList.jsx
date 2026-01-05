@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from './ui/dialog';
-import { Plus, Pencil, Trash2, Phone, Mail, MapPin, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Phone, Mail, MapPin, ChevronLeft, ChevronRight, Loader2, User, Search } from 'lucide-react';
 
 export function SupplierList() {
   const [suppliers, setSuppliers] = useState([]);
@@ -19,17 +19,20 @@ export function SupplierList() {
   const [page, setPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentSupplier, setCurrentSupplier] = useState({ name: '', email: '', phone: '', address: '' });
   const [errors, setErrors] = useState({});
 
-  const fetchSuppliers = async (pageNum) => {
+  const fetchSuppliers = async (pageNum, search) => {
     setLoading(true);
     // Use pageNum if provided, otherwise current page state (though usually we pass it from effect)
     const p = pageNum || page;
-    const result = await apiGet(`/suppliers?page=${p}`);
+    const query = search !== undefined ? search : searchQuery;
+    const url = `/suppliers?page=${p}${query ? `&search=${query}` : ''}`;
+    const result = await apiGet(url);
     if (result.success) {
       setSuppliers(result.data.data);
       setPage(result.data.current_page);
@@ -40,6 +43,14 @@ export function SupplierList() {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchSuppliers(1, searchQuery);
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
 
   useEffect(() => {
     fetchSuppliers(page);
@@ -113,6 +124,19 @@ export function SupplierList() {
           <Plus className="w-4 h-4 mr-2" />
           Ajouter
         </Button>
+      </div>
+
+      <div className="mb-6">
+        <div className="relative">
+         <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Rechercher un fournisseur..."
+            className="pl-10 h-11 bg-white border-gray-200 focus:border-orange-500 focus:ring-orange-500 rounded-xl"
+          />
+          
+        </div>
       </div>
 
       {loading && suppliers.length === 0 ? (
@@ -196,54 +220,67 @@ export function SupplierList() {
 
       {/* Add/Edit Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md bg-white">
           <DialogHeader>
             <DialogTitle>{isEditMode ? 'Modifier le fournisseur' : 'Ajouter un fournisseur'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Nom Complet</Label>
-              <Input
-                id="name"
-                value={currentSupplier.name}
-                onChange={(e) => setCurrentSupplier({ ...currentSupplier, name: e.target.value })}
-                placeholder="Ex: Jean Dupont"
-                className={errors.name ? "border-red-500" : ""}
-              />
+              <Label htmlFor="name" className="text-gray-700">Nom Complet</Label>
+              <div className="relative">
+                
+                <Input
+                  id="name"
+                  value={currentSupplier.name}
+                  onChange={(e) => setCurrentSupplier({ ...currentSupplier, name: e.target.value })}
+                  placeholder="Ex: Jean Dupont"
+                  className={`pl-10 h-11 bg-gray-50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all ${errors.name ? "border-red-500 focus:ring-red-200" : ""}`}
+                />
+              </div>
               {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={currentSupplier.email}
-                onChange={(e) => setCurrentSupplier({ ...currentSupplier, email: e.target.value })}
-                placeholder="Ex: jean@example.com"
-                className={errors.email ? "border-red-500" : ""}
-              />
+              <Label htmlFor="email" className="text-gray-700">Email</Label>
+                          <div className="relative">
+                            
+               
+                <Input
+                  id="email"
+                  type="email"
+                  value={currentSupplier.email}
+                  onChange={(e) => setCurrentSupplier({ ...currentSupplier, email: e.target.value })}
+                  placeholder="Ex: jean@example.com"
+                  className={`pl-10 h-11 bg-gray-50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all ${errors.email ? "border-red-500 focus:ring-red-200" : ""}`}
+                />
+              </div>
                {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone">Téléphone</Label>
-              <Input
-                id="phone"
-                value={currentSupplier.phone || ''}
-                onChange={(e) => setCurrentSupplier({ ...currentSupplier, phone: e.target.value })}
-                placeholder="+257 ..."
-              />
+              <Label htmlFor="phone" className="text-gray-700">Téléphone</Label>
+              <div className="relative">
+                <Input
+                  id="phone"
+                  value={currentSupplier.phone || ''}
+                  onChange={(e) => setCurrentSupplier({ ...currentSupplier, phone: e.target.value })}
+                  placeholder="+257 ..."
+                  className="pl-10 h-11 bg-gray-50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="address">Adresse</Label>
-              <Input
-                id="address"
-                value={currentSupplier.address || ''}
-                onChange={(e) => setCurrentSupplier({ ...currentSupplier, address: e.target.value })}
-                placeholder="Adresse physique"
-              />
+              <Label htmlFor="address" className="text-gray-700">Adresse</Label>
+              <div className="relative">
+                <Input
+                  id="address"
+                  value={currentSupplier.address || ''}
+                  onChange={(e) => setCurrentSupplier({ ...currentSupplier, address: e.target.value })}
+                  placeholder="Adresse physique"
+                  className="pl-10 h-11 bg-gray-50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
+                />
+              </div>
             </div>
           </div>
           <DialogFooter>
