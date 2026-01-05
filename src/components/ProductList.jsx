@@ -14,6 +14,7 @@ const typeLabels = {
 };
 import { useEffect, useRef, useCallback } from "react";
 import { useOutletContext } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export function ProductList(props) {
   const context = useOutletContext() || {};
@@ -24,6 +25,7 @@ export function ProductList(props) {
   const isFetching = props.isFetching !== undefined ? props.isFetching : context.isFetching;
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("all");
+  const navigate = useNavigate();
   
   const observer = useRef();
   const lastElementRef = useCallback(node => {
@@ -45,14 +47,23 @@ export function ProductList(props) {
   return <div className="min-h-screen bg-gray-50">
       {
     /* Header */
-  }
+    }
+    
+     
       <div className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-10">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl text-gray-900">Produits</h1>
           <div className="bg-orange-100 px-3 py-1 rounded-full text-sm text-orange-600">
             {filteredProducts.length}
           </div>
-        </div>
+      </div>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl text-gray-900">12</h1>
+      
+        <button className="bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700 transition-colors" onClick={() => navigate('/suppliers')}>
+          Listes des fournisseurs
+        </button>
+      </div>
 
         {
     /* Search */
@@ -67,12 +78,7 @@ export function ProductList(props) {
     className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
   />
       </div>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl text-gray-900">Fournisseurs</h1>
-        <button className="bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700 transition-colors">
-          Nouveau
-        </button>
-      </div>
+     
 
         {
     /* Filter Chips */

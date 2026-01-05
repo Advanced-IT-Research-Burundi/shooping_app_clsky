@@ -6,6 +6,7 @@ import { AddPurchase } from "../components/AddPurchase";
 import { ProductList } from "../components/ProductList";
 import { ProductDetail } from "../components/ProductDetail";
 import { Profile } from "../components/Profile";
+import { SupplierList } from "../components/SupplierList";
 
 const router = createBrowserRouter([
     {
@@ -23,6 +24,10 @@ const router = createBrowserRouter([
             {
                 path: 'products',
                 element: <ProductList />,
+            },
+            {
+                path: 'suppliers',
+                element: <SupplierList />,
             },
             {
                 path: 'product/:id',
