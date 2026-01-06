@@ -1,104 +1,40 @@
-import React, { useState, useEffect } from "react";
-import { Check, ChevronsUpDown, Plus, Loader2, User, Phone, MapPin } from "lucide-react";
-import { cn } from "./ui/utils";
-import { Button } from "./ui/button";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
-} from "./ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "./ui/popover";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "./ui/dialog";
-import { Label } from "./ui/label";
-import { Input } from "./ui/input";
-import { apiGet, apiPost } from "../api/axios";
+import { useEffect, useState } from "react";
+import { apiGet } from "../api/axios";
+import { Search, ChevronDown } from "lucide-react";
 
-export function SupplierSelect({ value, onChange, error }) {
-  const [open, setOpen] = useState(false);
+export function SupplierSelect({ value, setSupplierId }) {
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [search, setSearch] = useState("");
   
-  // Modal state
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newSupplier, setNewSupplier] = useState({ name: '', email: '', phone: '', address: '' });
-  const [createLoading, setCreateLoading] = useState(false);
-  const [createErrors, setCreateErrors] = useState({});
-
   useEffect(() => {
-    // Fetch initial suppliers (first page)
-    fetchSuppliers();
+    // Initial load
+    searchSuppliers("");
   }, []);
 
-  // Debounced search for the combobox
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (search) fetchSuppliers(search);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [search]);
-
-  const fetchSuppliers = async (query = "") => {
+  const searchSuppliers = async (search) => {
     setLoading(true);
-    const url = `/suppliers?page=1${query ? `&search=${query}` : ''}`;
-    const result = await apiGet(url);
-    if (result.success) {
-      setSuppliers(result.data.data);
+    try {
+      const endpoint = search ? `/suppliers?search=${encodeURIComponent(search)}` : '/suppliers';
+      const response = await apiGet(endpoint);
+      console.log("Suppliers API:", response);
+      
+      let data = [];
+      if (response.success) {
+          // Robustly handle array vs {data: array} (common in Laravel)
+          if (Array.isArray(response.data)) {
+              data = response.data;
+          } else if (response.data && Array.isArray(response.data.data)) {
+              data = response.data.data;
+          }
+      }
+      setSuppliers(data);
+    } catch (error) {
+      console.error(error);
+      setSuppliers([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  };
-
-  const selectedSupplier = suppliers.find((s) => s.id === value);
-
-  // --- Create Supplier Logic ---
-  const validateCreate = () => {
-    const errors = {};
-    if (!newSupplier.name) errors.name = "Le nom est requis";
-    if (!newSupplier.email) errors.email = "L'email est requis";
-    setCreateErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleCreate = async () => {
-    if (!validateCreate()) return;
-    setCreateLoading(true);
-    const result = await apiPost('/suppliers', newSupplier);
-    if (result.success) {
-      // Add to list and select it
-      // Since the API returns the created object usually, let's assume result.data is the supplier or result.data.data
-      const created = result.data.data || result.data; // Adjust based on API response structure
-      
-      // Update local list (prepend)
-      setSuppliers((prev) => [created, ...prev]);
-      
-      // Select it
-      onChange(created.id);
-      
-      // Close modal and popover
-      setIsModalOpen(false);
-      setOpen(false);
-      
-      // Reset form
-      setNewSupplier({ name: '', email: '', phone: '', address: '' });
-    } else {
-      alert("Erreur: " + (result.error || "Impossible de créer le fournisseur"));
-    }
-    setCreateLoading(false);
-  };
+  }
 
   return (
     <div className="space-y-2">
@@ -121,7 +57,7 @@ export function SupplierSelect({ value, onChange, error }) {
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+        <PopoverContent className="w-full p-0" align="start">
           <Command shouldFilter={false}>
             <CommandInput 
               placeholder="Rechercher..." 
@@ -137,7 +73,6 @@ export function SupplierSelect({ value, onChange, error }) {
 
               <CommandGroup>
                 <CommandItem
-                  value="new-supplier-action"
                   onSelect={() => {
                     setIsModalOpen(true);
                   }}
@@ -149,17 +84,16 @@ export function SupplierSelect({ value, onChange, error }) {
                 {suppliers.map((supplier) => (
                   <CommandItem
                     key={supplier.id}
-                    value={String(supplier.id) + "-" + supplier.name} 
+                    value={String(supplier.id)} // Value for filtering if using local filter, but we use server side, so this ID helps selection
                     onSelect={() => {
                       onChange(supplier.id);
                       setOpen(false);
-                      setSearch(""); // Clear search on select if desired
                     }}
                   >
                     <Check
                       className={cn(
                         "mr-2 h-4 w-4",
-                        String(value) === String(supplier.id) ? "opacity-100" : "opacity-0"
+                        value === supplier.id ? "opacity-100" : "opacity-0"
                       )}
                     />
                     <div className="flex flex-col">
