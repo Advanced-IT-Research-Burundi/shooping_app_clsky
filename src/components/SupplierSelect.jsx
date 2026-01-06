@@ -121,7 +121,7 @@ export function SupplierSelect({ value, onChange, error }) {
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-full p-0" align="start">
+        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
           <Command shouldFilter={false}>
             <CommandInput 
               placeholder="Rechercher..." 
@@ -137,6 +137,7 @@ export function SupplierSelect({ value, onChange, error }) {
 
               <CommandGroup>
                 <CommandItem
+                  value="new-supplier-action"
                   onSelect={() => {
                     setIsModalOpen(true);
                   }}
@@ -148,16 +149,17 @@ export function SupplierSelect({ value, onChange, error }) {
                 {suppliers.map((supplier) => (
                   <CommandItem
                     key={supplier.id}
-                    value={String(supplier.id)} // Value for filtering if using local filter, but we use server side, so this ID helps selection
+                    value={String(supplier.id) + "-" + supplier.name} 
                     onSelect={() => {
                       onChange(supplier.id);
                       setOpen(false);
+                      setSearch(""); // Clear search on select if desired
                     }}
                   >
                     <Check
                       className={cn(
                         "mr-2 h-4 w-4",
-                        value === supplier.id ? "opacity-100" : "opacity-0"
+                        String(value) === String(supplier.id) ? "opacity-100" : "opacity-0"
                       )}
                     />
                     <div className="flex flex-col">
