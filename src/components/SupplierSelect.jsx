@@ -1,10 +1,23 @@
 import { useEffect, useState } from "react";
-import { apiGet } from "../api/axios";
-import { Search, ChevronDown } from "lucide-react";
+import { apiGet, apiPost } from "../api/axios";
+import { ChevronsUpDown, Plus, Check, User, Phone, MapPin, Loader2 } from "lucide-react";
+import { Label } from "./ui/label";
+import { Button } from "./ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "./ui/command";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "./ui/dialog";
+import { Input } from "./ui/input";
+import { cn } from "./ui/utils";
 
-export function SupplierSelect({ value, setSupplierId }) {
+export function SupplierSelect({ value, setSupplierId, error }) {
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newSupplier, setNewSupplier] = useState({ name: "", email: "", phone: "", address: "" });
+  const [createErrors, setCreateErrors] = useState({});
+  const [createLoading, setCreateLoading] = useState(false);
   
   useEffect(() => {
     // Initial load
@@ -33,6 +46,28 @@ export function SupplierSelect({ value, setSupplierId }) {
       setSuppliers([]);
     } finally {
       setLoading(false);
+    }
+  }
+
+  const handleCreate = async () => {
+    setCreateLoading(true);
+    setCreateErrors({});
+    try {
+      // Assuming apiPost is available, similar to apiGet
+      const response = await apiPost('/suppliers', newSupplier);
+      if (response.success) {
+        setNewSupplier({ name: "", email: "", phone: "", address: "" });
+        setIsModalOpen(false);
+        // Refresh suppliers
+        searchSuppliers(search);
+      } else {
+        setCreateErrors(response.errors || {});
+      }
+    } catch (error) {
+      console.error(error);
+      setCreateErrors({ general: "Erreur lors de la création" });
+    } finally {
+      setCreateLoading(false);
     }
   }
 
@@ -86,7 +121,7 @@ export function SupplierSelect({ value, setSupplierId }) {
                     key={supplier.id}
                     value={String(supplier.id)} // Value for filtering if using local filter, but we use server side, so this ID helps selection
                     onSelect={() => {
-                      onChange(supplier.id);
+                      setSupplierId(supplier.id);
                       setOpen(false);
                     }}
                   >
