@@ -1,5 +1,5 @@
 {
-  "name": "CL SKY Mobile Shopping App",
+  "name": "Eden Mart Mobile Shopping App",
   "short_name": "ShoppingApp",
   "description": "A progressive web application for shopping",
   "theme_color": "#ffffff",
@@ -44,8 +44,5 @@
       "type": "image/png",
       "purpose": "any"
     }
-  ],
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff",
-  "display": "standalone"
+  ]
 }
