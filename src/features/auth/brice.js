@@ -9,4 +9,4 @@ function converToUSDandBIF(amount, exchangeRate, currentBurundianFrancRate) {
     };
 }
 
-console.log(converToUSDandBIF(100, 7.2, 7000)); // Expected output: 0.051
+console.log(converToUSDandBIF(100000, 1, 1)); // Expected output: 0.051
