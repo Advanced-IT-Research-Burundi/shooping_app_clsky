@@ -31,18 +31,18 @@ export function AddPurchase(props) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
-  const [currency, setCurrency] = useState("USD");
-  const [exchangeRate, setExchangeRate] = useState("7000");
+  const [currency, setCurrency] = useState("RMB");
+  const [rmbToUsd, setRmbToUsd] = useState("");
+  const [usdToBif, setUsdToBif] = useState("");
+
+  const DEFAULT_RMB_TO_USD = 7.15;
+  const DEFAULT_USD_TO_BIF = 7500;
+
+  const currentRmbToUsd = parseFloat(rmbToUsd) || DEFAULT_RMB_TO_USD;
+  const currentUsdToBif = parseFloat(usdToBif) || DEFAULT_USD_TO_BIF;
 
   const handleCurrencyChange = (newCurrency) => {
     setCurrency(newCurrency);
-    if (newCurrency === "BIF") {
-      setExchangeRate("1");
-    } else if (newCurrency === "USD") {
-      setExchangeRate("7000");
-    } else if (newCurrency === "RMB") {
-      setExchangeRate("1000");
-    }
   };
 
   const [type, setType] = useState("other");
@@ -52,8 +52,32 @@ export function AddPurchase(props) {
   const [supplierId, setSupplierId] = useState("");
   const fileInputRef = useRef(null);
 
-  const convertedPrice =
-    price && exchangeRate ? parseFloat(price) * parseFloat(exchangeRate) : 0;
+  // Values in all 3 currencies
+  const priceVal = parseFloat(price) || 0;
+
+  let totalBIF = 0;
+  let totalUSD = 0;
+  let totalRMB = 0;
+  let effectiveExchangeRate = 1;
+
+  if (currency === "RMB") {
+    totalRMB = priceVal;
+    totalUSD = priceVal / currentRmbToUsd;
+    totalBIF = totalUSD * currentUsdToBif;
+    effectiveExchangeRate = currentUsdToBif / currentRmbToUsd;
+  } else if (currency === "USD") {
+    totalUSD = priceVal;
+    totalBIF = priceVal * currentUsdToBif;
+    totalRMB = priceVal * currentRmbToUsd;
+    effectiveExchangeRate = currentUsdToBif;
+  } else if (currency === "BIF") {
+    totalBIF = priceVal;
+    totalUSD = priceVal / currentUsdToBif;
+    totalRMB = totalUSD * currentRmbToUsd;
+    effectiveExchangeRate = 1;
+  }
+
+  const convertedPrice = totalBIF;
 
   const handlePhotoCapture = (e) => {
     const file = e.target.files?.[0];
@@ -84,7 +108,7 @@ export function AddPurchase(props) {
       formData.append("description", description);
       formData.append("price", price);
       formData.append("currency", currency);
-      formData.append("exchange_rate", exchangeRate);
+      formData.append("exchange_rate", effectiveExchangeRate);
       formData.append("type", type);
       formData.append("packaging", packaging);
       // Add default status and quantity if needed
@@ -282,27 +306,76 @@ export function AddPurchase(props) {
             </div>
           </div>
 
-          <div>
-            <label className="text-sm text-gray-700 mb-2 block">
-              Taux de change (vers BIF)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              value={exchangeRate}
-              onChange={(e) => setExchangeRate(e.target.value)}
-              placeholder="2850"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm text-gray-700 mb-2 block">
+                Taux (1 USD en RMB)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={rmbToUsd}
+                onChange={(e) => setRmbToUsd(e.target.value)}
+                placeholder={DEFAULT_RMB_TO_USD.toString()}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+              <p className="text-[10px] text-gray-400 mt-1 italic">
+                Défaut: {DEFAULT_RMB_TO_USD}
+              </p>
+            </div>
+            <div>
+              <label className="text-sm text-gray-700 mb-2 block">
+                Taux (1 USD en BIF)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={usdToBif}
+                onChange={(e) => setUsdToBif(e.target.value)}
+                placeholder={DEFAULT_USD_TO_BIF.toString()}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+              <p className="text-[10px] text-gray-400 mt-1 italic">
+                Défaut: {DEFAULT_USD_TO_BIF} BIF
+              </p>
+            </div>
           </div>
 
-          <div className="bg-orange-50 rounded-xl p-4 border border-orange-100">
-            <div className="text-sm text-gray-600 mb-1">Prix converti</div>
-            <div className="text-2xl text-orange-600">
-              {convertedPrice.toLocaleString("fr-FR", {
-                maximumFractionDigits: 0,
-              })}{" "}
-              BIF
+          <div className="bg-orange-50 rounded-2xl p-4 border border-orange-100 flex flex-col gap-3">
+            <div className="text-sm text-gray-600 font-medium">
+              Récapitulatif des conversions
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="bg-white/50 p-2 rounded-xl">
+                <div className="text-[10px] text-gray-500 uppercase font-bold">
+                  BIF
+                </div>
+                <div className="text-sm font-bold text-orange-600">
+                  {totalBIF.toLocaleString("fr-FR", {
+                    maximumFractionDigits: 0,
+                  })}
+                </div>
+              </div>
+              <div className="bg-white/50 p-2 rounded-xl">
+                <div className="text-[10px] text-gray-500 uppercase font-bold">
+                  USD
+                </div>
+                <div className="text-sm font-bold text-orange-600">
+                  {totalUSD.toLocaleString("fr-FR", {
+                    maximumFractionDigits: 2,
+                  })}
+                </div>
+              </div>
+              <div className="bg-white/50 p-2 rounded-xl">
+                <div className="text-[10px] text-gray-500 uppercase font-bold">
+                  RMB
+                </div>
+                <div className="text-sm font-bold text-orange-600">
+                  {totalRMB.toLocaleString("fr-FR", {
+                    maximumFractionDigits: 2,
+                  })}
+                </div>
+              </div>
             </div>
           </div>
         </div>

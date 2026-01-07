@@ -52,7 +52,7 @@ export function Profile(props) {
           </div>
           <div className="flex-1">
             <h2 className="text-xl mb-1">{displayName}</h2>
-            <p className="text-orange-50 text-sm">{displayEmail}</p>
+            <p className="text-orange-50 text-sm truncate">{displayEmail}</p>
           </div>
         </div>
       </div>
@@ -174,7 +174,7 @@ function ChangePasswordModal({ isOpen, onClose }) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-white sm:max-w-md">
+      <DialogContent className="bg-white w-[95%] max-w-md rounded-3xl p-6">
         <DialogHeader>
           <DialogTitle>Changer le mot de passe</DialogTitle>
         </DialogHeader>
@@ -268,10 +268,12 @@ function ReportsModal({ isOpen, onClose }) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-white sm:max-w-xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Rapports des Produits</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="bg-white w-[95%] max-w-xl max-h-[90vh] overflow-y-auto rounded-3xl p-0">
+        <div className="p-6 sticky top-0 bg-white border-b border-gray-100 z-10">
+          <DialogHeader>
+            <DialogTitle>Rapports des Produits</DialogTitle>
+          </DialogHeader>
+        </div>
 
         <div className="space-y-4 py-4">
           {loading ? (
@@ -283,25 +285,25 @@ function ReportsModal({ isOpen, onClose }) {
               Aucun rapport disponible.
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3 px-6">
               {reports.map((report) => (
                 <div
                   key={report.id}
-                  className="p-4 bg-gray-50 rounded-xl border border-gray-100 flex justify-between items-center"
+                  className="p-4 bg-gray-50 rounded-xl border border-gray-100 flex flex-col sm:flex-row justify-between sm:items-center gap-3"
                 >
-                  <div>
-                    <h4 className="font-semibold text-gray-900">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-gray-900 truncate">
                       {report.name}
                     </h4>
                     <p className="text-xs text-gray-500">
                       {report.date} • {report.category}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-left sm:text-right shrink-0">
                     <div className="text-orange-600 font-bold">
                       {report.price} {report.currency}
                     </div>
-                    <div className="text-xs text-gray-400">
+                    <div className="text-[10px] text-gray-400">
                       Total: {report.convertedPrice?.toLocaleString()} BIF
                     </div>
                   </div>
@@ -311,22 +313,24 @@ function ReportsModal({ isOpen, onClose }) {
           )}
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Fermer
-          </Button>
-          <Button
-            className="bg-orange-600 hover:bg-orange-700 text-white"
-            onClick={() =>
-              window.open(
-                `${import.meta.env.VITE_API_BASE_URL}/products/report/export`,
-                "_blank"
-              )
-            }
-          >
-            Exporter CSV
-          </Button>
-        </DialogFooter>
+        <div className="p-6 border-t border-gray-100">
+          <DialogFooter className="flex flex-row gap-3">
+            <Button variant="outline" onClick={onClose} className="flex-1">
+              Fermer
+            </Button>
+            <Button
+              className="bg-orange-600 hover:bg-orange-700 text-white flex-1"
+              onClick={() =>
+                window.open(
+                  `${import.meta.env.VITE_API_BASE_URL}/products/report/export`,
+                  "_blank"
+                )
+              }
+            >
+              Exporter CSV
+            </Button>
+          </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

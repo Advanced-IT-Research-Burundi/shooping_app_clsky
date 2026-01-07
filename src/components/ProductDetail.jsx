@@ -30,12 +30,12 @@ const categories = [
 
 const devises = [
   { id: 1, code: "USD" },
-//   { id: 2, code: "EUR" },
+  //   { id: 2, code: "EUR" },
   { id: 2, code: "BIF" },
   { id: 3, code: "RMB" },
-//   { id: 4, code: "GBP" },
-//   { id: 5, code: "CAD" },
-//   { id: 6, code: "JPY" },
+  //   { id: 4, code: "GBP" },
+  //   { id: 5, code: "CAD" },
+  //   { id: 6, code: "JPY" },
 ];
 
 const packagingTypes = [
@@ -698,31 +698,44 @@ export function ProductDetail(props) {
       {/* Image Preview Modal */}
       {isPreviewOpen && (
         <div className="fixed inset-0 bg-black z-[100] flex flex-col">
-          <div className="flex justify-between items-center p-6 text-white bg-black/50 absolute top-0 w-full z-10">
-            <button onClick={() => setIsPreviewOpen(false)}>
-              <X className="w-8 h-8" />
+          {/* Controls Overlay */}
+          <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-[110] bg-gradient-to-b from-black/80 to-transparent pt-12">
+            <button
+              onClick={() => setIsPreviewOpen(false)}
+              className="p-3 bg-white/10 backdrop-blur-md rounded-full text-white active:scale-90 transition"
+            >
+              <X className="w-6 h-6" />
             </button>
-            <div className="flex gap-4">
+            <div className="flex gap-3">
               <button
                 onClick={handleDownload}
-                className="p-2 hover:bg-white/10 rounded-full transition"
+                className="p-3 bg-white/10 backdrop-blur-md rounded-full text-white active:scale-90 transition"
               >
                 <Download className="w-6 h-6" />
               </button>
               <button
                 onClick={handleShareWhatsApp}
-                className="p-2 hover:bg-white/10 rounded-full transition"
+                className="p-3 bg-white/10 backdrop-blur-md rounded-full text-white active:scale-90 transition"
               >
                 <Share2 className="w-6 h-6" />
               </button>
             </div>
           </div>
-          <div className="flex-1 flex items-center justify-center p-4">
+
+          {/* Image Container */}
+          <div className="flex-1 flex items-center justify-center p-2 bg-black">
             <img
               src={previewImage}
               alt="Full screen preview"
               className="max-w-full max-h-full object-contain"
             />
+          </div>
+
+          {/* Bottom Info Hint */}
+          <div className="absolute bottom-10 left-0 right-0 text-center pointer-events-none">
+            <span className="text-white/40 text-xs px-4 py-2 bg-white/5 backdrop-blur-sm rounded-full">
+              Pincer pour zoomer
+            </span>
           </div>
         </div>
       )}
