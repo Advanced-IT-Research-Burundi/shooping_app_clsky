@@ -6,34 +6,15 @@ import {
   LogOut,
   ChevronRight,
   Shield,
-  Key,
   FileText,
-  X,
-  Search,
-  Calendar,
-  Landmark,
 } from "lucide-react";
-import { useOutletContext } from "react-router-dom";
-import { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "./ui/dialog";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
-import { Label } from "./ui/label";
-import { apiPost, apiGet } from "../api/axios";
+import { useOutletContext, useNavigate } from "react-router-dom";
 
 export function Profile(props) {
   const context = useOutletContext() || {};
   const user = props.user || context.user;
   const onLogout = props.onLogout || context.onLogout;
-
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-  const [isReportsOpen, setIsReportsOpen] = useState(false);
+  const navigate = useNavigate();
 
   // Default values if user is null
   const displayName = user?.name || "Commerçant";
@@ -73,7 +54,7 @@ export function Profile(props) {
             label="Rapports"
             iconBg="bg-amber-100"
             iconColor="text-amber-600"
-            onClick={() => setIsReportsOpen(true)}
+            onClick={() => navigate("/reports")}
           />
           <Divider />
           <MenuItem
@@ -88,7 +69,7 @@ export function Profile(props) {
             label="Sécurité & Confidentialité"
             iconBg="bg-green-100"
             iconColor="text-green-600"
-            onClick={() => setIsPasswordModalOpen(true)}
+            onClick={() => navigate("/change-password")}
           />
         </div>
 
@@ -119,220 +100,7 @@ export function Profile(props) {
           Version 1.0.0
         </div>
       </div>
-
-      <ChangePasswordModal
-        isOpen={isPasswordModalOpen}
-        onClose={() => setIsPasswordModalOpen(false)}
-      />
-
-      <ReportsModal
-        isOpen={isReportsOpen}
-        onClose={() => setIsReportsOpen(false)}
-      />
     </div>
-  );
-}
-
-function ChangePasswordModal({ isOpen, onClose }) {
-  const [formData, setFormData] = useState({
-    current_password: "",
-    password: "",
-    password_confirmation: "",
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    setSuccess(null);
-
-    try {
-      const res = await apiPost("/change-password", formData);
-      if (res.success) {
-        setSuccess("Mot de passe changé avec succès.");
-        setFormData({
-          current_password: "",
-          password: "",
-          password_confirmation: "",
-        });
-        setTimeout(() => {
-          onClose();
-          setSuccess(null);
-        }, 2000);
-      } else {
-        setError(res.error || "Une erreur est survenue.");
-      }
-    } catch (err) {
-      setError(err.message || "Erreur de connexion.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-white w-[95%] max-w-md rounded-3xl p-6">
-        <DialogHeader>
-          <DialogTitle>Changer le mot de passe</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label>Mot de passe actuel</Label>
-            <Input
-              type="password"
-              value={formData.current_password}
-              onChange={(e) =>
-                setFormData({ ...formData, current_password: e.target.value })
-              }
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Nouveau mot de passe</Label>
-            <Input
-              type="password"
-              value={formData.password}
-              onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
-              }
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Confirmer le nouveau mot de passe</Label>
-            <Input
-              type="password"
-              value={formData.password_confirmation}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  password_confirmation: e.target.value,
-                })
-              }
-              required
-            />
-          </div>
-
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          {success && <p className="text-sm text-green-600">{success}</p>}
-
-          <DialogFooter className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={loading}
-            >
-              Annuler
-            </Button>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="bg-orange-600 hover:bg-orange-700 text-white"
-            >
-              {loading ? "Chargement..." : "Enregistrer"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function ReportsModal({ isOpen, onClose }) {
-  const [reports, setReports] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (isOpen) {
-      fetchReports();
-    }
-  }, [isOpen]);
-
-  const fetchReports = async () => {
-    setLoading(true);
-    try {
-      const res = await apiGet("/product_reportss");
-      if (res.success) {
-        setReports(res.data || []);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-white w-[95%] max-w-xl max-h-[90vh] overflow-y-auto rounded-3xl p-0">
-        <div className="p-6 sticky top-0 bg-white border-b border-gray-100 z-10">
-          <DialogHeader>
-            <DialogTitle>Rapports des Produits</DialogTitle>
-          </DialogHeader>
-        </div>
-
-        <div className="space-y-4 py-4">
-          {loading ? (
-            <div className="text-center py-8 text-gray-500">
-              Chargement des rapports...
-            </div>
-          ) : reports.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              Aucun rapport disponible.
-            </div>
-          ) : (
-            <div className="space-y-3 px-6">
-              {reports.map((report) => (
-                <div
-                  key={report.id}
-                  className="p-4 bg-gray-50 rounded-xl border border-gray-100 flex flex-col sm:flex-row justify-between sm:items-center gap-3"
-                >
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-gray-900 truncate">
-                      {report.name}
-                    </h4>
-                    <p className="text-xs text-gray-500">
-                      {report.date} • {report.category}
-                    </p>
-                  </div>
-                  <div className="text-left sm:text-right shrink-0">
-                    <div className="text-orange-600 font-bold">
-                      {report.price} {report.currency}
-                    </div>
-                    <div className="text-[10px] text-gray-400">
-                      Total: {report.convertedPrice?.toLocaleString()} BIF
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="p-6 border-t border-gray-100">
-          <DialogFooter className="flex flex-row gap-3">
-            <Button variant="outline" onClick={onClose} className="flex-1">
-              Fermer
-            </Button>
-            <Button
-              className="bg-orange-600 hover:bg-orange-700 text-white flex-1"
-              onClick={() =>
-                window.open(
-                  `${import.meta.env.VITE_API_BASE_URL}/products/report/export`,
-                  "_blank"
-                )
-              }
-            >
-              Exporter CSV
-            </Button>
-          </DialogFooter>
-        </div>
-      </DialogContent>
-    </Dialog>
   );
 }
 

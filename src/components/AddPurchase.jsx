@@ -1,6 +1,6 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Camera, X, Upload, ChevronDown, AlertCircle } from "lucide-react";
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, useLocation } from "react-router-dom";
 import { SupplierSelect } from "./SupplierSelect";
 import { useAddProductMutation } from "../features/auth/apiSlicer";
 
@@ -19,6 +19,7 @@ const packagingTypes = [
 
 export function AddPurchase(props) {
   const context = useOutletContext() || {};
+  const location = useLocation();
   const onCancel = props.onCancel || context.onCancel;
   // user might expect onSubmit to navigate
   const onSuccessNavigate = props.onSubmit || context.onSubmit;
@@ -26,6 +27,7 @@ export function AddPurchase(props) {
   const [addProduct, { isLoading, error: apiError }] = useAddProductMutation();
   const [formErrors, setFormErrors] = useState([]);
 
+  // Form State
   const [photo, setPhoto] = useState("");
   const [photoFile, setPhotoFile] = useState(null);
   const [name, setName] = useState("");
@@ -34,6 +36,80 @@ export function AddPurchase(props) {
   const [currency, setCurrency] = useState("RMB");
   const [rmbToUsd, setRmbToUsd] = useState("");
   const [usdToBif, setUsdToBif] = useState("");
+  const [type, setType] = useState("other");
+  const [packaging, setPackaging] = useState("unit");
+  const [piecesPerCarton, setPiecesPerCarton] = useState("");
+  const [numberOfCartons, setNumberOfCartons] = useState("");
+  const [supplierId, setSupplierId] = useState("");
+
+  const STORAGE_KEY = "add_purchase_form_state";
+
+  // Persistence: Load on mount
+  useEffect(() => {
+    const savedState = sessionStorage.getItem(STORAGE_KEY);
+    if (savedState) {
+      const state = JSON.parse(savedState);
+      setName(state.name || "");
+      setDescription(state.description || "");
+      setPrice(state.price || "");
+      setCurrency(state.currency || "RMB");
+      setRmbToUsd(state.rmbToUsd || "");
+      setUsdToBif(state.usdToBif || "");
+      setType(state.type || "other");
+      setPackaging(state.packaging || "unit");
+      setPiecesPerCarton(state.piecesPerCarton || "");
+      setNumberOfCartons(state.numberOfCartons || "");
+      setSupplierId(state.supplierId || "");
+      // Note: We can't easily persist photoFile, but we can persist the photo preview (Base64)
+      if (state.photo) setPhoto(state.photo);
+    }
+  }, []);
+
+  // Persistence: Save on change
+  useEffect(() => {
+    const stateToSave = {
+      name,
+      description,
+      price,
+      currency,
+      rmbToUsd,
+      usdToBif,
+      type,
+      packaging,
+      piecesPerCarton,
+      numberOfCartons,
+      supplierId,
+      photo, // Base64 string
+    };
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+  }, [
+    name,
+    description,
+    price,
+    currency,
+    rmbToUsd,
+    usdToBif,
+    type,
+    packaging,
+    piecesPerCarton,
+    numberOfCartons,
+    supplierId,
+    photo,
+  ]);
+
+  // Handle returning from supplier creation
+  useEffect(() => {
+    if (location.state?.newSupplierId) {
+      setSupplierId(location.state.newSupplierId);
+      // Clean up state to prevent re-execution
+      window.history.replaceState(
+        { ...location.state, newSupplierId: null },
+        ""
+      );
+    }
+  }, [location.state]);
+
+  const fileInputRef = useRef(null);
 
   const DEFAULT_RMB_TO_USD = 7.15;
   const DEFAULT_USD_TO_BIF = 7500;
@@ -44,13 +120,6 @@ export function AddPurchase(props) {
   const handleCurrencyChange = (newCurrency) => {
     setCurrency(newCurrency);
   };
-
-  const [type, setType] = useState("other");
-  const [packaging, setPackaging] = useState("unit");
-  const [piecesPerCarton, setPiecesPerCarton] = useState("");
-  const [numberOfCartons, setNumberOfCartons] = useState("");
-  const [supplierId, setSupplierId] = useState("");
-  const fileInputRef = useRef(null);
 
   // Values in all 3 currencies
   const priceVal = parseFloat(price) || 0;
@@ -125,14 +194,15 @@ export function AddPurchase(props) {
 
       if (packaging === "carton") {
         if (piecesPerCarton)
-          formData.append("pieces_per_carton", piecesPerCarton);
+          formData.append("unit_per_package", piecesPerCarton);
         if (numberOfCartons)
           formData.append("number_of_cartons", numberOfCartons);
       }
 
       const result = await addProduct(formData).unwrap();
 
-      // On success, navigate
+      // On success, clear storage and navigate
+      sessionStorage.removeItem(STORAGE_KEY);
       if (onSuccessNavigate) onSuccessNavigate(result);
     } catch (err) {
       console.error("Submission error:", err);

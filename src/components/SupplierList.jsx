@@ -1,19 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { apiGet, apiPost, apiPut, apiDelete } from '../api/axios';
-import { Button } from './ui/button';
-import { Card, CardContent } from './ui/card';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
+import React, { useState, useEffect } from "react";
+import { apiGet, apiPost, apiPut, apiDelete } from "../api/axios";
+import { Button } from "./ui/button";
+import { Card, CardContent } from "./ui/card";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from './ui/dialog';
-import { Plus, Pencil, Trash2, Phone, Mail, MapPin, ChevronLeft, ChevronRight, Loader2, User, Search } from 'lucide-react';
+  Plus,
+  Pencil,
+  Trash2,
+  Phone,
+  Mail,
+  MapPin,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  Loader2,
+} from "lucide-react";
+
+import { useNavigate } from "react-router-dom";
 
 export function SupplierList() {
+  const navigate = useNavigate();
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -21,17 +28,11 @@ export function SupplierList() {
   const [total, setTotal] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [currentSupplier, setCurrentSupplier] = useState({ name: '', email: '', phone: '', address: '' });
-  const [errors, setErrors] = useState({});
-
   const fetchSuppliers = async (pageNum, search) => {
     setLoading(true);
-    // Use pageNum if provided, otherwise current page state (though usually we pass it from effect)
     const p = pageNum || page;
     const query = search !== undefined ? search : searchQuery;
-    const url = `/suppliers?page=${p}${query ? `&search=${query}` : ''}`;
+    const url = `/suppliers?page=${p}${query ? `&search=${query}` : ""}`;
     const result = await apiGet(url);
     if (result.success) {
       setSuppliers(result.data.data);
@@ -57,51 +58,15 @@ export function SupplierList() {
   }, [page]);
 
   const handleOpenAdd = () => {
-    setIsEditMode(false);
-    setCurrentSupplier({ name: '', email: '', phone: '', address: '' });
-    setErrors({});
-    setIsModalOpen(true);
+    navigate("/suppliers/add");
   };
 
   const handleOpenEdit = (supplier) => {
-    setIsEditMode(true);
-    setCurrentSupplier({ ...supplier }); // Copy to avoid mutating directly
-    setErrors({});
-    setIsModalOpen(true);
-  };
-
-  const validate = () => {
-    const newErrors = {};
-    if (!currentSupplier.name) newErrors.name = "Le nom est requis";
-    // Email is optional in some logic, but usually required. The user json shows email.
-    if (!currentSupplier.email) newErrors.email = "L'email est requis"; 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async () => {
-    if (!validate()) return;
-
-    setLoading(true);
-    let result;
-    if (isEditMode) {
-      result = await apiPut(`/suppliers/${currentSupplier.id}`, currentSupplier);
-    } else {
-      result = await apiPost('/suppliers', currentSupplier);
-    }
-
-    if (result.success) {
-      setIsModalOpen(false);
-      // Refresh list
-      fetchSuppliers(page);
-    } else {
-      alert("Erreur: " + result.error);
-    }
-    setLoading(false);
+    navigate(`/suppliers/edit/${supplier.id}`, { state: { supplier } });
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce fournisseur ?')) {
+    if (window.confirm("Êtes-vous sûr de vouloir supprimer ce fournisseur ?")) {
       setLoading(true);
       const result = await apiDelete(`/suppliers/${id}`);
       if (result.success) {
@@ -120,7 +85,10 @@ export function SupplierList() {
           <h1 className="text-2xl font-bold text-gray-900">Fournisseurs</h1>
           <p className="text-sm text-gray-500">{total} fournisseurs trouvés</p>
         </div>
-        <Button onClick={handleOpenAdd} className="bg-orange-600 hover:bg-orange-700 text-white">
+        <Button
+          onClick={handleOpenAdd}
+          className="bg-orange-600 hover:bg-orange-700 text-white"
+        >
           <Plus className="w-4 h-4 mr-2" />
           Ajouter
         </Button>
@@ -128,14 +96,13 @@ export function SupplierList() {
 
       <div className="mb-6">
         <div className="relative">
-         <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+          <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Rechercher un fournisseur..."
             className="pl-10 h-11 bg-white border-gray-200 focus:border-orange-500 focus:ring-orange-500 rounded-xl"
           />
-          
         </div>
       </div>
 
@@ -146,11 +113,16 @@ export function SupplierList() {
       ) : (
         <div className="space-y-4">
           {suppliers.map((supplier) => (
-            <Card key={supplier.id} className="overflow-hidden border-none shadow-sm hover:shadow-md transition-shadow">
+            <Card
+              key={supplier.id}
+              className="overflow-hidden border-none shadow-sm hover:shadow-md transition-shadow"
+            >
               <CardContent className="p-4">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="font-semibold text-lg text-gray-900">{supplier.name}</h3>
+                    <h3 className="font-semibold text-lg text-gray-900">
+                      {supplier.name}
+                    </h3>
                     <div className="mt-2 space-y-1">
                       {supplier.email && (
                         <div className="flex items-center text-sm text-gray-600">
@@ -173,10 +145,20 @@ export function SupplierList() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(supplier)} className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleOpenEdit(supplier)}
+                      className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                    >
                       <Pencil className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(supplier.id)} className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(supplier.id)}
+                      className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -184,7 +166,7 @@ export function SupplierList() {
               </CardContent>
             </Card>
           ))}
-          
+
           {suppliers.length === 0 && !loading && (
             <div className="text-center py-10 text-gray-500">
               Aucun fournisseur trouvé.
@@ -199,7 +181,7 @@ export function SupplierList() {
           <Button
             variant="outline"
             size="icon"
-            onClick={() => setPage(p => Math.max(1, p - 1))}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1 || loading}
           >
             <ChevronLeft className="w-4 h-4" />
@@ -210,88 +192,13 @@ export function SupplierList() {
           <Button
             variant="outline"
             size="icon"
-            onClick={() => setPage(p => Math.min(lastPage, p + 1))}
+            onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
             disabled={page === lastPage || loading}
           >
             <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
       )}
-
-      {/* Add/Edit Modal */}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-md bg-white">
-          <DialogHeader>
-            <DialogTitle>{isEditMode ? 'Modifier le fournisseur' : 'Ajouter un fournisseur'}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-gray-700">Nom Complet</Label>
-              <div className="relative">
-                
-                <Input
-                  id="name"
-                  value={currentSupplier.name}
-                  onChange={(e) => setCurrentSupplier({ ...currentSupplier, name: e.target.value })}
-                  placeholder="Ex: Jean Dupont"
-                  className={`pl-10 h-11 bg-gray-50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all ${errors.name ? "border-red-500 focus:ring-red-200" : ""}`}
-                />
-              </div>
-              {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-gray-700">Email</Label>
-                          <div className="relative">
-                            
-               
-                <Input
-                  id="email"
-                  type="email"
-                  value={currentSupplier.email}
-                  onChange={(e) => setCurrentSupplier({ ...currentSupplier, email: e.target.value })}
-                  placeholder="Ex: jean@example.com"
-                  className={`pl-10 h-11 bg-gray-50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all ${errors.email ? "border-red-500 focus:ring-red-200" : ""}`}
-                />
-              </div>
-               {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="phone" className="text-gray-700">Téléphone</Label>
-              <div className="relative">
-                <Input
-                  id="phone"
-                  value={currentSupplier.phone || ''}
-                  onChange={(e) => setCurrentSupplier({ ...currentSupplier, phone: e.target.value })}
-                  placeholder="+257 ..."
-                  className="pl-10 h-11 bg-gray-50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="address" className="text-gray-700">Adresse</Label>
-              <div className="relative">
-                <Input
-                  id="address"
-                  value={currentSupplier.address || ''}
-                  onChange={(e) => setCurrentSupplier({ ...currentSupplier, address: e.target.value })}
-                  placeholder="Adresse physique"
-                  className="pl-10 h-11 bg-gray-50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
-                />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Annuler</Button>
-            <Button onClick={handleSubmit} disabled={loading} className="bg-orange-600 hover:bg-orange-700 text-white">
-              {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {isEditMode ? 'Enregistrer' : 'Créer'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

@@ -119,9 +119,10 @@ export function ProductDetail(props) {
           : new Date().toISOString().split("T")[0],
         category_id: currentCategory.id,
         devise_id: currentDevise.id,
-        piecesPerCarton: product.piecesPerCarton || "",
-        piecesPerCarton: product.piecesPerCarton || "",
-        numberOfCartons: product.numberOfCartons || "",
+        unit_per_package:
+          product.unit_per_package || product.piecesPerCarton || "",
+        numberOfCartons:
+          product.numberOfCartons || product.number_of_cartons || "",
         supplier_id: product.supplier_id || "",
       });
     }
@@ -198,8 +199,8 @@ export function ProductDetail(props) {
       }
 
       if (editForm.packaging === "carton") {
-        if (editForm.piecesPerCarton)
-          formData.append("pieces_per_carton", editForm.piecesPerCarton);
+        if (editForm.unit_per_package)
+          formData.append("unit_per_package", editForm.unit_per_package);
         if (editForm.numberOfCartons)
           formData.append("number_of_cartons", editForm.numberOfCartons);
       }
@@ -409,11 +410,11 @@ export function ProductDetail(props) {
                 </label>
                 <input
                   type="number"
-                  value={editForm.piecesPerCarton}
+                  value={editForm.unit_per_package}
                   onChange={(e) =>
                     setEditForm({
                       ...editForm,
-                      piecesPerCarton: e.target.value,
+                      unit_per_package: e.target.value,
                     })
                   }
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -636,6 +637,36 @@ export function ProductDetail(props) {
               </div>
             </div>
           </div>
+
+          {product.packaging === "carton" && (
+            <>
+              <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
+                <div className="bg-blue-100 p-3 rounded-xl">
+                  <Box className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <div className="text-sm text-gray-500">Nombre de carton</div>
+                  <div className="text-gray-900">
+                    {product.numberOfCartons || product.number_of_cartons}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
+                <div className="bg-purple-100 p-3 rounded-xl">
+                  <Package className="w-5 h-5 text-purple-600" />
+                </div>
+                <div>
+                  <div className="text-sm text-gray-500">
+                    Nombre de piece par carton
+                  </div>
+                  <div className="text-gray-900">
+                    {product.unit_per_package || product.piecesPerCarton}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
 
           <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
             <div className="bg-gray-100 p-3 rounded-xl">
