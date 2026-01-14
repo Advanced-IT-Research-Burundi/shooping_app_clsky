@@ -15,6 +15,7 @@ import {
   Download,
   Copy,
   ExternalLink,
+  User,
 } from "lucide-react";
 import { SupplierSelect } from "./SupplierSelect";
 import { useState, useEffect, useRef } from "react";
@@ -275,12 +276,10 @@ export function ProductDetail(props) {
           </div>
 
           {/* Supplier */}
-          <div className="bg-white rounded-xl shadow-sm">
-            <SupplierSelect
-              value={editForm.supplier_id}
-              onChange={(id) => setEditForm({ ...editForm, supplier_id: id })}
-            />
-          </div>
+          <SupplierSelect
+            value={editForm.supplier_id}
+            onChange={(id) => setEditForm({ ...editForm, supplier_id: id })}
+          />
 
           {/* Price & Quantity & Date */}
           <div className="grid grid-cols-2 gap-4">
@@ -625,6 +624,18 @@ export function ProductDetail(props) {
 
         <div className="bg-white rounded-3xl shadow-lg p-6 space-y-4">
           <h2 className="text-lg text-gray-900 mb-4">Détails</h2>
+
+          <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
+            <div className="bg-blue-100 p-3 rounded-xl">
+              <User className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <div className="text-sm text-gray-500">Fournisseur</div>
+              <div className="text-gray-900">
+                {product.supplier_name || "Non spécifié"}
+              </div>
+            </div>
+          </div>
 
           <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
             <div className="bg-orange-100 p-3 rounded-xl">
