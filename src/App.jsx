@@ -31,7 +31,7 @@ export default function App() {
 
   // State for infinite scroll pagination
   const [page, setPage] = useState(1);
-  const { data: apiData, isFetching } = useGetProductsQuery(page);
+  const { data: apiData, isFetching } = useGetProductsQuery({ page });
 
   const allProducts = apiData?.data || products; 
 

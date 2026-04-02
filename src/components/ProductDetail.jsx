@@ -16,11 +16,17 @@ import {
   Copy,
   ExternalLink,
   User,
+  Archive,
+  RotateCcw,
 } from "lucide-react";
 import { SupplierSelect } from "./SupplierSelect";
 import { useState, useEffect, useRef } from "react";
-import { useParams, Navigate, useOutletContext } from "react-router-dom";
-import { useUpdateProductMutation } from "../features/auth/apiSlicer";
+import { useParams, Navigate, useOutletContext, useNavigate } from "react-router-dom";
+import { 
+  useUpdateProductMutation,
+  useArchiveProductMutation,
+  useUnarchiveProductMutation, 
+} from "../features/auth/apiSlicer";
 
 const categories = [
   { id: 1, label: "Alimentaire", icon: "\u{1F34E}", value: "food" },
@@ -61,6 +67,9 @@ export function ProductDetail(props) {
   const onEditContext = props.onEdit || context.onEdit;
 
   const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
+  const [archiveProduct, { isLoading: isArchiving }] = useArchiveProductMutation();
+  const [unarchiveProduct, { isLoading: isUnarchiving }] = useUnarchiveProductMutation();
+  const navigate = useNavigate();
 
   // Resolve product: either from props or find by ID from params
   let product = props.product;
@@ -137,6 +146,22 @@ export function ProductDetail(props) {
 
   const handleDelete = () => {
     onDelete(product.id);
+  };
+
+  const handleArchiveToggle = async () => {
+    try {
+      if (product.is_archived) {
+        await unarchiveProduct(product.id).unwrap();
+        alert("Produit restaur\xE9 !");
+      } else {
+        await archiveProduct(product.id).unwrap();
+        alert("Produit archiv\xE9 !");
+        navigate("/products");
+      }
+    } catch (err) {
+      console.error("Archive toggle failed", err);
+      alert("Une erreur est survenue");
+    }
   };
 
   const handlePhotoSelect = (e) => {
@@ -620,6 +645,28 @@ export function ProductDetail(props) {
               Supprimer
             </button>
           </div>
+
+          <button
+            onClick={handleArchiveToggle}
+            disabled={isArchiving || isUnarchiving}
+            className={`w-full flex items-center justify-center gap-2 mt-3 py-3 rounded-xl transition-all active:scale-95 ${
+              product.is_archived
+                ? "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            {product.is_archived ? (
+              <>
+                <RotateCcw className="w-5 h-5" />
+                {isUnarchiving ? "Restauration..." : "Restaurer le produit"}
+              </>
+            ) : (
+              <>
+                <Archive className="w-5 h-5" />
+                {isArchiving ? "Archivage..." : "Archiver le produit"}
+              </>
+            )}
+          </button>
         </div>
 
         <div className="bg-white rounded-3xl shadow-lg p-6 space-y-4">

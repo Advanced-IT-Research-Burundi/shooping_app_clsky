@@ -71,6 +71,14 @@ export function Profile(props) {
             iconColor="text-green-600"
             onClick={() => navigate("/change-password")}
           />
+          <Divider />
+          <MenuItem
+            icon={<FileText className="w-5 h-5" />}
+            label="Produits archivés"
+            iconBg="bg-orange-100"
+            iconColor="text-orange-600"
+            onClick={() => navigate("/archive")}
+          />
         </div>
 
         {/* Help Group */}

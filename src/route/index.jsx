@@ -11,6 +11,8 @@ import { SupplierFormScreen } from "../components/SupplierFormScreen";
 import { ChangePasswordScreen } from "../components/ChangePasswordScreen";
 import { ReportsScreen } from "../components/ReportsScreen";
 
+import { ArchiveList } from "../components/ArchiveList";
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -27,6 +29,10 @@ const router = createBrowserRouter([
       {
         path: "products",
         element: <ProductList />,
+      },
+      {
+        path: "archive",
+        element: <ArchiveList />,
       },
       {
         path: "suppliers",

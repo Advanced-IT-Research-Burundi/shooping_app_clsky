@@ -18,10 +18,11 @@ export const apiSlice = createApi({
       query: (endpoint = '/data') => endpoint,
     }),
     getProducts: builder.query({
-      query: (page = 1) => `/products?page=${page}`,
-      // Only have one cache entry because the arg always maps to one 'Products' list
-      serializeQueryArgs: ({ endpointName }) => {
-        return endpointName;
+      query: ({ page = 1, archived = false } = {}) => `/products?page=${page}${archived ? '&archived=1' : ''}`,
+      // Distinct cache entries for active vs archived products
+      serializeQueryArgs: ({ endpointName, queryArgs }) => {
+        const archived = queryArgs?.archived ? 'archived' : 'active';
+        return `${endpointName}-${archived}`;
       },
       // Provides tags for invalidation
       providesTags: (result) => 
@@ -73,7 +74,55 @@ export const apiSlice = createApi({
       }),
       invalidatesTags: (result, error, { id }) => [{ type: 'Product', id }, { type: 'Product', id: 'LIST' }],
     }),
+    archiveProduct: builder.mutation({
+      query: (id) => ({
+        url: `/products/${id}/archive`,
+        method: 'POST',
+      }),
+      invalidatesTags: (result, error, id) => [{ type: 'Product', id }, { type: 'Product', id: 'LIST' }],
+    }),
+    unarchiveProduct: builder.mutation({
+      query: (id) => ({
+        url: `/products/${id}/unarchive`,
+        method: 'POST',
+      }),
+      invalidatesTags: (result, error, id) => [{ type: 'Product', id }, { type: 'Product', id: 'LIST' }],
+    }),
+    bulkArchiveProducts: builder.mutation({
+      query: (ids) => ({
+        url: '/products/bulk-archive',
+        method: 'POST',
+        body: { ids },
+      }),
+      invalidatesTags: [{ type: 'Product', id: 'LIST' }],
+    }),
+    bulkUnarchiveProducts: builder.mutation({
+      query: (ids) => ({
+        url: '/products/bulk-unarchive',
+        method: 'POST',
+        body: { ids },
+      }),
+      invalidatesTags: [{ type: 'Product', id: 'LIST' }],
+    }),
+    bulkDeleteProducts: builder.mutation({
+      query: (ids) => ({
+        url: '/products/bulk-delete',
+        method: 'POST',
+        body: { ids },
+      }),
+      invalidatesTags: [{ type: 'Product', id: 'LIST' }],
+    }),
   }),
 });
 
-export const { useGetDataQuery, useGetProductsQuery, useAddProductMutation, useUpdateProductMutation } = apiSlice;
+export const { 
+  useGetDataQuery, 
+  useGetProductsQuery, 
+  useAddProductMutation, 
+  useUpdateProductMutation,
+  useArchiveProductMutation,
+  useUnarchiveProductMutation,
+  useBulkArchiveProductsMutation,
+  useBulkUnarchiveProductsMutation,
+  useBulkDeleteProductsMutation,
+} = apiSlice;
