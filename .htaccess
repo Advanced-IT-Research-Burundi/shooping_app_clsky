@@ -1,0 +1,12 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # If the request is not a real file
+    RewriteCond %{REQUEST_FILENAME} !-f
+
+    # If the request is not a real directory
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Redirect everything to index.html
+    RewriteRule ^ index.html [L]
+</IfModule>
