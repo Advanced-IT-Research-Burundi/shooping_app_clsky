@@ -1,4 +1,14 @@
-import { Search, Filter, Package, Box, CheckCircle2, Circle, Trash2, Archive, X } from "lucide-react";
+import {
+  Search,
+  Filter,
+  Package,
+  Box,
+  CheckCircle2,
+  Circle,
+  Trash2,
+  Archive,
+  X,
+} from "lucide-react";
 import { useState } from "react";
 const typeIcons = {
   food: "\u{1F34E}",
@@ -15,9 +25,9 @@ const typeLabels = {
 import { useEffect, useRef, useCallback } from "react";
 import { useOutletContext } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { 
-  useBulkArchiveProductsMutation, 
-  useBulkDeleteProductsMutation 
+import {
+  useBulkArchiveProductsMutation,
+  useBulkDeleteProductsMutation,
 } from "../features/auth/apiSlicer";
 
 export function ProductList(props) {
@@ -40,8 +50,8 @@ export function ProductList(props) {
 
   const toggleSelect = (id, e) => {
     e.stopPropagation();
-    setSelectedIds(prev => 
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     );
   };
 
@@ -49,7 +59,7 @@ export function ProductList(props) {
     if (selectedIds.length === filteredProducts.length) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(filteredProducts.map(p => p.id));
+      setSelectedIds(filteredProducts.map((p) => p.id));
     }
   };
 
@@ -61,7 +71,11 @@ export function ProductList(props) {
   };
 
   const handleBulkDelete = async () => {
-    if (window.confirm(`Supprimer définitivement ${selectedIds.length} produits ?`)) {
+    if (
+      window.confirm(
+        `Supprimer définitivement ${selectedIds.length} produits ?`,
+      )
+    ) {
       await bulkDelete(selectedIds);
       setSelectedIds([]);
     }
@@ -79,7 +93,7 @@ export function ProductList(props) {
       });
       if (node) observer.current.observe(node);
     },
-    [isFetching, hasMore, onLoadMore]
+    [isFetching, hasMore, onLoadMore],
   );
 
   const filteredProducts = products.filter((product) => {
@@ -102,11 +116,13 @@ export function ProductList(props) {
             </div>
           </div>
           {isSelectionMode && (
-            <button 
+            <button
               onClick={selectAll}
               className="text-sm text-orange-600 font-medium"
             >
-              {selectedIds.length === filteredProducts.length ? "Tout désélectionner" : "Tout sélectionner"}
+              {selectedIds.length === filteredProducts.length
+                ? "Tout désélectionner"
+                : "Tout sélectionner"}
             </button>
           )}
         </div>
@@ -181,17 +197,19 @@ export function ProductList(props) {
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
-              
+
               {/* Selection Overlay */}
-              <div 
+              <div
                 onClick={(e) => toggleSelect(product.id, e)}
                 className="absolute inset-0 z-20 group-hover:bg-black/5 transition-colors"
               >
-                <div className={`absolute top-2 left-2 p-1 rounded-full transition-all ${
-                  selectedIds.includes(product.id) 
-                    ? "bg-orange-600 text-white scale-110 shadow-lg" 
-                    : "bg-white/80 text-gray-400 opacity-0 group-hover:opacity-100 backdrop-blur-sm"
-                }`}>
+                <div
+                  className={`absolute top-2 left-2 p-1 rounded-full transition-all ${
+                    selectedIds.includes(product.id)
+                      ? "bg-orange-600 text-white scale-110 shadow-lg"
+                      : "bg-white/80 text-gray-400 opacity-0 group-hover:opacity-100 backdrop-blur-sm"
+                  }`}
+                >
                   {selectedIds.includes(product.id) ? (
                     <CheckCircle2 className="w-5 h-5" />
                   ) : (
@@ -200,7 +218,7 @@ export function ProductList(props) {
                 </div>
               </div>
 
-              <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs z-10">
+              <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs z-1">
                 {typeIcons[product.type] || typeIcons.other}
               </div>
               {product.packaging === "carton" && (
@@ -254,13 +272,15 @@ export function ProductList(props) {
       {isSelectionMode && (
         <div className="fixed bottom-24 left-4 right-4 bg-gray-900 text-white p-4 rounded-2xl shadow-2xl z-50 flex items-center justify-between animate-in slide-in-from-bottom duration-300">
           <div className="flex items-center gap-3">
-            <button 
+            <button
               onClick={() => setSelectedIds([])}
               className="p-1 hover:bg-white/10 rounded-lg transition"
             >
               <X className="w-5 h-5" />
             </button>
-            <span className="font-medium">{selectedIds.length} sélectionnés</span>
+            <span className="font-medium">
+              {selectedIds.length} sélectionnés
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <button

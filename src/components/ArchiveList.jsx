@@ -1,10 +1,22 @@
-import { Search, Filter, Package, Box, CheckCircle2, Circle, Trash2, RotateCcw, X, ArrowLeft } from "lucide-react";
+import {
+  Search,
+  Filter,
+  Package,
+  Box,
+  CheckCircle2,
+  Circle,
+  Trash2,
+  RotateCcw,
+  X,
+  ArrowLeft,
+} from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
-import { 
+import { Archive } from "lucide-react";
+import {
   useGetProductsQuery,
-  useBulkUnarchiveProductsMutation, 
-  useBulkDeleteProductsMutation 
+  useBulkUnarchiveProductsMutation,
+  useBulkDeleteProductsMutation,
 } from "../features/auth/apiSlicer";
 
 const typeIcons = {
@@ -24,12 +36,15 @@ const typeLabels = {
 export function ArchiveList() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
-  const { data: apiData, isFetching } = useGetProductsQuery({ page, archived: true });
-  
+  const { data: apiData, isFetching } = useGetProductsQuery({
+    page,
+    archived: true,
+  });
+
   // NOTE: The current apiSlicer.js getProducts query is: query: (page = 1) => `/products?page=${page}`
   // I should probably update apiSlicer to handle an object for query args or just pass the string.
   // Let's assume for now I can pass a string or I'll update apiSlicer in the next step.
-  
+
   const products = apiData?.data || [];
   const hasMore = apiData?.meta?.current_page < apiData?.meta?.last_page;
 
@@ -49,12 +64,12 @@ export function ArchiveList() {
       if (observer.current) observer.current.disconnect();
       observer.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting && hasMore) {
-          setPage(prev => prev + 1);
+          setPage((prev) => prev + 1);
         }
       });
       if (node) observer.current.observe(node);
     },
-    [isFetching, hasMore]
+    [isFetching, hasMore],
   );
 
   const filteredProducts = products.filter((product) => {
@@ -67,8 +82,8 @@ export function ArchiveList() {
 
   const toggleSelect = (id, e) => {
     e.stopPropagation();
-    setSelectedIds(prev => 
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     );
   };
 
@@ -76,7 +91,7 @@ export function ArchiveList() {
     if (selectedIds.length === filteredProducts.length) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(filteredProducts.map(p => p.id));
+      setSelectedIds(filteredProducts.map((p) => p.id));
     }
   };
 
@@ -88,7 +103,11 @@ export function ArchiveList() {
   };
 
   const handleBulkDelete = async () => {
-    if (window.confirm(`Supprimer définitivement ${selectedIds.length} produits ?`)) {
+    if (
+      window.confirm(
+        `Supprimer définitivement ${selectedIds.length} produits ?`,
+      )
+    ) {
       await bulkDelete(selectedIds);
       setSelectedIds([]);
     }
@@ -100,7 +119,7 @@ export function ArchiveList() {
       <div className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-30">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <button 
+            <button
               onClick={() => navigate("/profile")}
               className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition"
             >
@@ -115,14 +134,18 @@ export function ArchiveList() {
 
         <div className="flex items-center justify-between mb-4">
           {isSelectionMode ? (
-            <button 
+            <button
               onClick={selectAll}
               className="text-sm text-orange-600 font-medium"
             >
-              {selectedIds.length === filteredProducts.length ? "Tout désélectionner" : "Tout sélectionner"}
+              {selectedIds.length === filteredProducts.length
+                ? "Tout désélectionner"
+                : "Tout sélectionner"}
             </button>
           ) : (
-            <span className="text-sm text-gray-500">Gérez vos produits archivés</span>
+            <span className="text-sm text-gray-500">
+              Gérez vos produits archivés
+            </span>
           )}
         </div>
 
@@ -186,17 +209,19 @@ export function ArchiveList() {
                 alt={product.name}
                 className="w-full h-full object-cover grayscale-[0.5]"
               />
-              
+
               {/* Selection Overlay */}
-              <div 
+              <div
                 onClick={(e) => toggleSelect(product.id, e)}
                 className="absolute inset-0 z-20 hover:bg-black/5 transition-colors"
               >
-                <div className={`absolute top-2 left-2 p-1 rounded-full transition-all ${
-                  selectedIds.includes(product.id) 
-                    ? "bg-orange-600 text-white scale-110 shadow-lg" 
-                    : "bg-white/80 text-gray-400 opacity-0 group-hover:opacity-100 backdrop-blur-sm"
-                }`}>
+                <div
+                  className={`absolute top-2 left-2 p-1 rounded-full transition-all ${
+                    selectedIds.includes(product.id)
+                      ? "bg-orange-600 text-white scale-110 shadow-lg"
+                      : "bg-white/80 text-gray-400 opacity-0 group-hover:opacity-100 backdrop-blur-sm"
+                  }`}
+                >
                   {selectedIds.includes(product.id) ? (
                     <CheckCircle2 className="w-5 h-5" />
                   ) : (
@@ -205,10 +230,10 @@ export function ArchiveList() {
                 </div>
               </div>
 
-              <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs z-10">
+              <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs z-1">
                 {typeIcons[product.type] || typeIcons.other}
               </div>
-              
+
               <div className="absolute bottom-2 right-2 bg-gray-900/60 backdrop-blur-sm px-2 py-1 rounded text-[10px] text-white font-medium z-10">
                 ARCHIV\xC9
               </div>
@@ -230,8 +255,13 @@ export function ArchiveList() {
 
       {/* Infinite Scroll Sentinel */}
       {(hasMore || isFetching) && (
-        <div ref={lastElementRef} className="py-8 text-center text-gray-500 text-sm italic">
-          {isFetching ? "Chargement des archives..." : "Défiler pour charger plus"}
+        <div
+          ref={lastElementRef}
+          className="py-8 text-center text-gray-500 text-sm italic"
+        >
+          {isFetching
+            ? "Chargement des archives..."
+            : "Défiler pour charger plus"}
         </div>
       )}
 
@@ -240,7 +270,9 @@ export function ArchiveList() {
           <div className="bg-gray-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
             <Archive className="w-12 h-12 text-gray-400" />
           </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Aucun produit archivé</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
+            Aucun produit archivé
+          </h2>
           <p className="text-gray-500">
             Les produits que vous archivez apparaîtront ici.
           </p>
@@ -251,13 +283,15 @@ export function ArchiveList() {
       {isSelectionMode && (
         <div className="fixed bottom-6 left-4 right-4 bg-gray-900 text-white p-4 rounded-2xl shadow-2xl z-50 flex items-center justify-between animate-in slide-in-from-bottom duration-300">
           <div className="flex items-center gap-3">
-            <button 
+            <button
               onClick={() => setSelectedIds([])}
               className="p-1 hover:bg-white/10 rounded-lg transition"
             >
               <X className="w-5 h-5" />
             </button>
-            <span className="font-medium">{selectedIds.length} sélectionnés</span>
+            <span className="font-medium">
+              {selectedIds.length} sélectionnés
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <button
