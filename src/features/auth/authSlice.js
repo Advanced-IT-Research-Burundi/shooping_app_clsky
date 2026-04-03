@@ -7,12 +7,17 @@ const initialState = {
   user: (() => {
     try {
       const u = localStorage.getItem(USER_KEY);
-      return u ? JSON.parse(u) : null;
+      if (!u || u === 'undefined' || u === 'null') return null;
+      return JSON.parse(u);
     } catch (e) {
       return null;
     }
   })(),
-  token: localStorage.getItem(TOKEN_KEY) || null,
+  token: (() => {
+    const t = localStorage.getItem(TOKEN_KEY);
+    if (!t || t === 'undefined' || t === 'null') return null;
+    return t;
+  })(),
 };
 
 const authSlice = createSlice({
