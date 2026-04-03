@@ -60,8 +60,7 @@ export function AddPurchase(props) {
       setPiecesPerCarton(state.piecesPerCarton || "");
       setNumberOfCartons(state.numberOfCartons || "");
       setSupplierId(state.supplierId || "");
-      // Note: We can't easily persist photoFile, but we can persist the photo preview (Base64)
-      if (state.photo) setPhoto(state.photo);
+      // Note: We can't easily persist photoFile, and we won't persist the photo preview (Base64) to avoid QuotaExceededError on mobile
     }
   }, []);
 
@@ -79,7 +78,6 @@ export function AddPurchase(props) {
       piecesPerCarton,
       numberOfCartons,
       supplierId,
-      photo, // Base64 string
     };
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
   }, [
@@ -94,7 +92,6 @@ export function AddPurchase(props) {
     piecesPerCarton,
     numberOfCartons,
     supplierId,
-    photo,
   ]);
 
   // Handle returning from supplier creation

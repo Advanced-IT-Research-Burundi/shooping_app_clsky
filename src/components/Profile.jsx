@@ -47,6 +47,7 @@ export function Profile(props) {
             label="Paramètres"
             iconBg="bg-blue-100"
             iconColor="text-blue-600"
+            onClick={() => navigate("/settings")}
           />
           <Divider />
           <MenuItem
@@ -62,6 +63,7 @@ export function Profile(props) {
             label="Notifications"
             iconBg="bg-purple-100"
             iconColor="text-purple-600"
+            onClick={() => navigate("/notifications")}
           />
           <Divider />
           <MenuItem
@@ -88,6 +90,7 @@ export function Profile(props) {
             label="Centre d'aide"
             iconBg="bg-orange-100"
             iconColor="text-orange-600"
+            onClick={() => navigate("/help")}
           />
         </div>
 

@@ -60,7 +60,7 @@ export function SupplierFormScreen() {
     if (isEditMode) {
       result = await apiPut(
         `/suppliers/${currentSupplier.id}`,
-        currentSupplier
+        currentSupplier,
       );
     } else {
       result = await apiPost("/suppliers", currentSupplier);

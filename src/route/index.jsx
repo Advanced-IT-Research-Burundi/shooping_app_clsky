@@ -12,6 +12,9 @@ import { ChangePasswordScreen } from "../components/ChangePasswordScreen";
 import { ReportsScreen } from "../components/ReportsScreen";
 
 import { ArchiveList } from "../components/ArchiveList";
+import { SettingsScreen } from "../components/SettingsScreen";
+import { NotificationsScreen } from "../components/NotificationsScreen";
+import { HelpCenterScreen } from "../components/HelpCenterScreen";
 
 const router = createBrowserRouter([
   {
@@ -61,6 +64,18 @@ const router = createBrowserRouter([
       {
         path: "reports",
         element: <ReportsScreen />,
+      },
+      {
+        path: "settings",
+        element: <SettingsScreen />,
+      },
+      {
+        path: "notifications",
+        element: <NotificationsScreen />,
+      },
+      {
+        path: "help",
+        element: <HelpCenterScreen />,
       },
     ],
   },
