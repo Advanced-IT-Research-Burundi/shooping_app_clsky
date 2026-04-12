@@ -58,14 +58,14 @@ export function Profile(props) {
             onClick={() => navigate("/reports")}
           />
           <Divider />
-          <MenuItem
+          {/* <MenuItem
             icon={<Bell className="w-5 h-5" />}
             label="Notifications"
             iconBg="bg-purple-100"
             iconColor="text-purple-600"
             onClick={() => navigate("/notifications")}
           />
-          <Divider />
+          <Divider /> */}
           <MenuItem
             icon={<Shield className="w-5 h-5" />}
             label="Sécurité & Confidentialité"
@@ -84,7 +84,7 @@ export function Profile(props) {
         </div>
 
         {/* Help Group */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        {/* <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
           <MenuItem
             icon={<HelpCircle className="w-5 h-5" />}
             label="Centre d'aide"
@@ -92,7 +92,7 @@ export function Profile(props) {
             iconColor="text-orange-600"
             onClick={() => navigate("/help")}
           />
-        </div>
+        </div> */}
 
         {/* Logout */}
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
