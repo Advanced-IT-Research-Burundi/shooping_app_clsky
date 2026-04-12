@@ -22,7 +22,7 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
 
 export const apiSlice = createApi({
   reducerPath: 'api',
-  tagTypes: ['Product'],
+  tagTypes: ['Product', 'User'],
   baseQuery: baseQueryWithReauth,
   endpoints: (builder) => ({
     getData: builder.query({
@@ -123,6 +123,33 @@ export const apiSlice = createApi({
       }),
       invalidatesTags: [{ type: 'Product', id: 'LIST' }],
     }),
+    getUsers: builder.query({
+      query: () => '/users',
+      providesTags: ['User'],
+    }),
+    updateProfile: builder.mutation({
+      query: (data) => ({
+        url: '/update-profile',
+        method: 'PUT',
+        body: data,
+      }),
+    }),
+    addUser: builder.mutation({
+      query: (data) => ({
+        url: '/users',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['User'],
+    }),
+    updateUserData: builder.mutation({
+      query: ({ id, ...data }) => ({
+        url: `/users/${id}`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: ['User'],
+    }),
   }),
 });
 
@@ -136,4 +163,8 @@ export const {
   useBulkArchiveProductsMutation,
   useBulkUnarchiveProductsMutation,
   useBulkDeleteProductsMutation,
+  useGetUsersQuery,
+  useUpdateProfileMutation,
+  useAddUserMutation,
+  useUpdateUserDataMutation,
 } = apiSlice;
