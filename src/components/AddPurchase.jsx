@@ -1,10 +1,18 @@
 import { useState, useRef, useEffect } from "react";
-import { Camera, X, Upload, ChevronDown, AlertCircle } from "lucide-react";
+import {
+  Camera,
+  X,
+  Upload,
+  ChevronDown,
+  AlertCircle,
+  DollarSign,
+  Maximize2,
+} from "lucide-react";
 import { useOutletContext, useLocation } from "react-router-dom";
 import { SupplierSelect } from "./SupplierSelect";
-import { 
-  useAddProductMutation, 
-  useGetDevisesQuery 
+import {
+  useAddProductMutation,
+  useGetDevisesQuery,
 } from "../features/auth/apiSlicer";
 
 const productTypes = [
@@ -43,20 +51,27 @@ export function AddPurchase(props) {
   const [piecesPerCarton, setPiecesPerCarton] = useState("");
   const [numberOfCartons, setNumberOfCartons] = useState("");
   const [supplierId, setSupplierId] = useState("");
+  const [customsPrice, setCustomsPrice] = useState("");
+  const [customsPriceCurrency, setCustomsPriceCurrency] = useState("USD");
+  const [cbm, setCbm] = useState("");
 
   const { data: devisesList } = useGetDevisesQuery();
   const currencies = devisesList ? devisesList.map((d) => d.code) : [];
-  
+
   // Helper to get currency code from current deviseId
-  const selectedDevise = devisesList?.find(d => d.id.toString() === deviseId.toString());
+  const selectedDevise = devisesList?.find(
+    (d) => d.id.toString() === deviseId.toString(),
+  );
   const currency = selectedDevise?.code || "";
 
   // Initialize deviseId if not set
   useEffect(() => {
     if (devisesList && devisesList.length > 0 && !deviseId) {
       // Try to match "RMB" default if it exists, otherwise use first
-      const rmbDevise = devisesList.find(d => d.code === "RMB");
-      setDeviseId(rmbDevise ? rmbDevise.id.toString() : devisesList[0].id.toString());
+      const rmbDevise = devisesList.find((d) => d.code === "RMB");
+      setDeviseId(
+        rmbDevise ? rmbDevise.id.toString() : devisesList[0].id.toString(),
+      );
     }
   }, [devisesList, deviseId]);
 
@@ -78,6 +93,9 @@ export function AddPurchase(props) {
       setPiecesPerCarton(state.piecesPerCarton || "");
       setNumberOfCartons(state.numberOfCartons || "");
       setSupplierId(state.supplierId || "");
+      setCustomsPrice(state.customsPrice || "");
+      setCustomsPriceCurrency(state.customsPriceCurrency || "USD");
+      setCbm(state.cbm || "");
       // Note: We can't easily persist photoFile, and we won't persist the photo preview (Base64) to avoid QuotaExceededError on mobile
     }
   }, [devisesList]); // Add devisesList dependency to ensure we wait for it if needed for initialization logic if any
@@ -96,6 +114,9 @@ export function AddPurchase(props) {
       piecesPerCarton,
       numberOfCartons,
       supplierId,
+      customsPrice,
+      customsPriceCurrency,
+      cbm,
     };
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
   }, [
@@ -110,6 +131,7 @@ export function AddPurchase(props) {
     piecesPerCarton,
     numberOfCartons,
     supplierId,
+    customsPrice,
   ]);
 
   // Handle returning from supplier creation
@@ -119,7 +141,7 @@ export function AddPurchase(props) {
       // Clean up state to prevent re-execution
       window.history.replaceState(
         { ...location.state, newSupplierId: null },
-        ""
+        "",
       );
     }
   }, [location.state]);
@@ -192,6 +214,9 @@ export function AddPurchase(props) {
       formData.append("description", description);
       formData.append("price", price);
       formData.append("devise_id", deviseId);
+      formData.append("customs_price", customsPrice || 0);
+      formData.append("customs_price_currency", customsPriceCurrency);
+      formData.append("cbm", cbm || 0);
       formData.append("currency", currency); // Keep for legacy/info if needed
       formData.append("exchange_rate", effectiveExchangeRate);
       formData.append("type", type);
@@ -202,7 +227,7 @@ export function AddPurchase(props) {
         "quantity",
         packaging === "carton" && piecesPerCarton && numberOfCartons
           ? parseInt(piecesPerCarton) * parseInt(numberOfCartons)
-          : 1
+          : 1,
       );
 
       if (supplierId) formData.append("supplier_id", supplierId);
@@ -427,6 +452,69 @@ export function AddPurchase(props) {
             </div>
           </div>
 
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-4">
+            <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              <Maximize2 className="w-4 h-4 text-orange-500" />
+              Volume & Logistique
+            </h3>
+            <div>
+              <label className="text-sm text-gray-700 mb-2 block font-medium">
+                CBM Total (m³)
+              </label>
+              <input
+                type="number"
+                step="0.0001"
+                value={cbm}
+                onChange={(e) => setCbm(e.target.value)}
+                placeholder="0.0000"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-4">
+            <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-orange-500" />
+              Informations Financières
+            </h3>
+
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm text-gray-700 mb-2 block font-medium">
+                    Prix de dédouanement (Unitaire)
+                  </label>
+                  <div className="flex gap-2">
+                    <div className="flex-[2] relative">
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={customsPrice}
+                        onChange={(e) => setCustomsPrice(e.target.value)}
+                        placeholder="0.00"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      />
+                    </div>
+                    <div className="flex-1 relative">
+                      <select
+                        value={customsPriceCurrency}
+                        onChange={(e) =>
+                          setCustomsPriceCurrency(e.target.value)
+                        }
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 appearance-none bg-white font-bold text-orange-600"
+                      >
+                        <option value="USD">USD</option>
+                        <option value="RMB">RMB</option>
+                        <option value="BIF">BIF</option>
+                      </select>
+                      <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="bg-orange-50 rounded-2xl p-4 border border-orange-100 flex flex-col gap-3">
             <div className="text-sm text-gray-600 font-medium">
               Récapitulatif des conversions (Estimation)
@@ -435,25 +523,37 @@ export function AddPurchase(props) {
               {/* Note: We keep BIF, USD, RMB as the main standard recap if they exist in the system */}
               {currencies.includes("BIF") && (
                 <div className="bg-white/50 p-2 rounded-xl">
-                  <div className="text-[10px] text-gray-500 uppercase font-bold">BIF</div>
+                  <div className="text-[10px] text-gray-500 uppercase font-bold">
+                    BIF
+                  </div>
                   <div className="text-sm font-bold text-orange-600">
-                    {totalBIF.toLocaleString("fr-FR", { maximumFractionDigits: 0 })}
+                    {totalBIF.toLocaleString("fr-FR", {
+                      maximumFractionDigits: 0,
+                    })}
                   </div>
                 </div>
               )}
               {currencies.includes("USD") && (
                 <div className="bg-white/50 p-2 rounded-xl">
-                  <div className="text-[10px] text-gray-500 uppercase font-bold">USD</div>
+                  <div className="text-[10px] text-gray-500 uppercase font-bold">
+                    USD
+                  </div>
                   <div className="text-sm font-bold text-orange-600">
-                    {totalUSD.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}
+                    {totalUSD.toLocaleString("fr-FR", {
+                      maximumFractionDigits: 2,
+                    })}
                   </div>
                 </div>
               )}
               {currencies.includes("RMB") && (
                 <div className="bg-white/50 p-2 rounded-xl">
-                  <div className="text-[10px] text-gray-500 uppercase font-bold">RMB</div>
+                  <div className="text-[10px] text-gray-500 uppercase font-bold">
+                    RMB
+                  </div>
                   <div className="text-sm font-bold text-orange-600">
-                    {totalRMB.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}
+                    {totalRMB.toLocaleString("fr-FR", {
+                      maximumFractionDigits: 2,
+                    })}
                   </div>
                 </div>
               )}

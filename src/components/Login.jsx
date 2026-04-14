@@ -107,13 +107,13 @@ export function Login({ onLogin }) {
                 "Sign In"
               )}
             </Button>
-            <Button
+            {/* <Button
               variant="ghost"
               className="w-full text-gray-500 hover:text-gray-700"
               type="button"
             >
               Create an account
-            </Button>
+            </Button> */}
           </CardFooter>
         </form>
       </Card>

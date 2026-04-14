@@ -153,6 +153,9 @@ export function ProductDetail(props) {
         numberOfCartons:
           product.numberOfCartons || product.number_of_cartons || "",
         supplier_id: product.supplier_id || "",
+        customs_price: product.customs_price || "",
+        customs_price_currency: product.customs_price_currency || "USD",
+        cbm: product.cbm || "",
       });
     }
   }, [product, devisesList]);
@@ -257,6 +260,9 @@ export function ProductDetail(props) {
       formData.append("devise_id", editForm.devise_id);
       if (editForm.supplier_id)
         formData.append("supplier_id", editForm.supplier_id);
+      formData.append("customs_price", editForm.customs_price || 0);
+      formData.append("customs_price_currency", editForm.customs_price_currency);
+      formData.append("cbm", editForm.cbm || 0);
 
       // Append new photos
       // 'photos[]' or just 'photo' depending on backend. User said "ajouter plus des photos", usually 'photos' array.
@@ -454,6 +460,59 @@ export function ProductDetail(props) {
                   </option>
                 ))}
               </select>
+            </div>
+          </div>
+          
+          {/* Volume & CBM */}
+          <div>
+            <label className="text-sm text-gray-700 mb-2 block font-medium">
+              Volume Total (CBM - m³)
+            </label>
+            <input
+              type="number"
+              step="0.0001"
+              value={editForm.cbm}
+              onChange={(e) => setEditForm({ ...editForm, cbm: e.target.value })}
+              placeholder="0.0000"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+            />
+          </div>
+
+          {/* Customs Price & Currency */}
+          <div>
+            <label className="text-sm text-gray-700 mb-2 block font-medium">
+              Prix de dédouanement (Unitaire)
+            </label>
+            <div className="flex gap-2">
+              <div className="flex-[2] relative">
+                <input
+                  type="number"
+                  step="0.01"
+                  value={editForm.customs_price}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, customs_price: e.target.value })
+                  }
+                  placeholder="0.00"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+              <div className="flex-1 relative">
+                <select
+                  value={editForm.customs_price_currency}
+                  onChange={(e) =>
+                    setEditForm({
+                      ...editForm,
+                      customs_price_currency: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 appearance-none bg-white font-bold text-orange-600"
+                >
+                  <option value="USD">USD</option>
+                  <option value="RMB">RMB</option>
+                  <option value="BIF">BIF</option>
+                </select>
+                <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
             </div>
           </div>
 
@@ -736,6 +795,30 @@ export function ProductDetail(props) {
               <div className="text-sm text-gray-500">Fournisseur</div>
               <div className="text-gray-900">
                 {product.supplier_name || "Non spécifié"}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
+            <div className="bg-red-50 p-3 rounded-xl">
+              <DollarSign className="w-5 h-5 text-red-600" />
+            </div>
+            <div>
+              <div className="text-sm text-gray-500">Dédouanement</div>
+              <div className="text-gray-900 font-bold">
+                {product.customs_price?.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} {product.customs_price_currency || product.currency}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
+            <div className="bg-purple-100 p-3 rounded-xl">
+              <Maximize2 className="w-5 h-5 text-purple-600" />
+            </div>
+            <div>
+              <div className="text-sm text-gray-500">Volume Total</div>
+              <div className="text-gray-900 font-bold">
+                {product.cbm || "0.0000"} m³
               </div>
             </div>
           </div>

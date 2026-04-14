@@ -171,7 +171,31 @@ export const apiSlice = createApi({
       providesTags: (result, error, id) => [{ type: 'Container', id }],
     }),
     getDevises: builder.query({
-      query: () => '/devises',
+      query: () => "/devises",
+    }),
+    getSuppliers: builder.query({
+      query: () => "/suppliers",
+      transformResponse: (response) => response.data || response,
+    }),
+    getReports: builder.query({
+      query: (params = {}) => {
+        const queryParams = new URLSearchParams();
+        if (params.start_date) queryParams.append("start_date", params.start_date);
+        if (params.end_date) queryParams.append("end_date", params.end_date);
+        if (params.supplier_id) queryParams.append("supplier_id", params.supplier_id);
+        if (params.container_id) queryParams.append("container_id", params.container_id);
+        if (params.category_id) queryParams.append("category_id", params.category_id);
+        
+        const queryString = queryParams.toString();
+        return queryString ? `/product_reportss?${queryString}` : "/product_reportss";
+      },
+      transformResponse: (response) => {
+        // Ensure we always return an array
+        if (response && response.data && Array.isArray(response.data)) return response.data;
+        if (Array.isArray(response)) return response;
+        return [];
+      },
+      providesTags: ["Product"],
     }),
   }),
 });
@@ -193,4 +217,6 @@ export const {
   useGetContainersQuery,
   useGetContainerProductsQuery,
   useGetDevisesQuery,
+  useGetSuppliersQuery,
+  useGetReportsQuery,
 } = apiSlice;
