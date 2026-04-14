@@ -198,7 +198,7 @@ export function ProductList(props) {
           )}
         </div>
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl text-gray-900">12</h1>
+          <h1 className="text-2xl text-gray-900"></h1>
 
           <button
             className="bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700 transition-colors"
@@ -306,7 +306,9 @@ export function ProductList(props) {
                 {product.price} {product.currency}
               </div>
               <div className="text-xs text-orange-600/70 mt-1 flex items-center gap-1 font-medium bg-orange-50 w-fit px-2 py-0.5 rounded-md">
-                <span className="truncate">{product.supplier_name || 'Sans fournisseur'}</span>
+                <span className="truncate">
+                  {product.supplier_name || "Sans fournisseur"}
+                </span>
               </div>
               {product.packaging === "carton" && product.numberOfCartons && (
                 <div className="text-xs text-gray-500 mt-2 flex items-center gap-1">
