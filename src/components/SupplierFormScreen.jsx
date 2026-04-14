@@ -46,7 +46,7 @@ export function SupplierFormScreen() {
   const validate = () => {
     const newErrors = {};
     if (!currentSupplier.name) newErrors.name = "Le nom est requis";
-    if (!currentSupplier.email) newErrors.email = "L'email est requis";
+    // if (!currentSupplier.email) newErrors.email = "L'email est requis";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
