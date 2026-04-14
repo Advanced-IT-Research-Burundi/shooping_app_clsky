@@ -1,314 +1,417 @@
 import {
   Search,
-  Filter,
-  Package,
-  Box,
   CheckCircle2,
   Circle,
   Trash2,
   RotateCcw,
   X,
   ArrowLeft,
+  Archive,
+  Package,
+  ChevronRight,
+  Box,
+  RefreshCw,
 } from "lucide-react";
-import { useState, useEffect, useRef, useCallback } from "react";
-import { useOutletContext, useNavigate } from "react-router-dom";
-import { Archive } from "lucide-react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import {
-  useGetProductsQuery,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "./ui/alert-dialog";
+import {
+  useGetContainersQuery,
+  useGetContainerProductsQuery,
   useBulkUnarchiveProductsMutation,
   useBulkDeleteProductsMutation,
 } from "../features/auth/apiSlicer";
 
-const typeIcons = {
-  food: "\u{1F34E}",
-  electronics: "\u{1F4F1}",
-  clothing: "\u{1F455}",
-  other: "\u{1F4E6}",
-};
+// ─── Container Card ─────────────────────────────────────────────────────────
+function ContainerCard({ container, onClick }) {
+  const photos = container.preview_photos || [];
+  return (
+    <div
+      onClick={onClick}
+      className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden active:scale-[0.98] transition-transform cursor-pointer"
+    >
+      {/* Photo Strip */}
+      <div className="flex h-28 overflow-hidden bg-gray-100">
+        {photos.length > 0 ? (
+          photos.slice(0, 3).map((url, i) => (
+            <img
+              key={i}
+              src={url}
+              alt=""
+              className={`object-cover flex-1 min-w-0 ${
+                i > 0 ? "border-l border-white/40" : ""
+              } ${photos.length === 1 ? "" : ""}`}
+            />
+          ))
+        ) : (
+          <div className="flex-1 flex items-center justify-center">
+            <Box className="w-12 h-12 text-gray-300" />
+          </div>
+        )}
+      </div>
 
-const typeLabels = {
-  food: "Alimentaire",
-  electronics: "\xC9lectronique",
-  clothing: "V\xEAtements",
-  other: "Autres",
-};
+      {/* Info */}
+      <div className="p-4 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="font-semibold text-gray-900 truncate">
+            {container.name}
+          </h3>
+          <p className="text-xs text-gray-400 mt-0.5">
+            #{container.serial_number}
+          </p>
+          {container.description && (
+            <p className="text-xs text-gray-500 mt-1 line-clamp-1">
+              {container.description}
+            </p>
+          )}
+        </div>
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          <span className="bg-orange-100 text-orange-600 text-xs font-bold px-2.5 py-1 rounded-full">
+            {container.products_count}
+          </span>
+          <span className="text-[10px] text-gray-400">produits</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-export function ArchiveList() {
-  const navigate = useNavigate();
-  const [page, setPage] = useState(1);
-  const { data: apiData, isFetching } = useGetProductsQuery({
-    page,
-    archived: true,
-  });
-
-  // NOTE: The current apiSlicer.js getProducts query is: query: (page = 1) => `/products?page=${page}`
-  // I should probably update apiSlicer to handle an object for query args or just pass the string.
-  // Let's assume for now I can pass a string or I'll update apiSlicer in the next step.
-
-  const products = apiData?.data || [];
-  const hasMore = apiData?.meta?.current_page < apiData?.meta?.last_page;
-
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterType, setFilterType] = useState("all");
+// ─── Products In Container View ──────────────────────────────────────────────
+function ContainerProductsView({ containerId, containerName, onBack }) {
+  const { data, isFetching, refetch } = useGetContainerProductsQuery(containerId);
   const [selectedIds, setSelectedIds] = useState([]);
-
+  
+  useEffect(() => {
+    refetch();
+  }, []);
+  const [showUnarchiveConfirm, setShowUnarchiveConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [bulkUnarchive] = useBulkUnarchiveProductsMutation();
   const [bulkDelete] = useBulkDeleteProductsMutation();
+  const navigate = useNavigate();
 
+  const products = data?.products || [];
   const isSelectionMode = selectedIds.length > 0;
-
-  const observer = useRef();
-  const lastElementRef = useCallback(
-    (node) => {
-      if (isFetching) return;
-      if (observer.current) observer.current.disconnect();
-      observer.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && hasMore) {
-          setPage((prev) => prev + 1);
-        }
-      });
-      if (node) observer.current.observe(node);
-    },
-    [isFetching, hasMore],
-  );
-
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch =
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter = filterType === "all" || product.type === filterType;
-    return matchesSearch && matchesFilter;
-  });
 
   const toggleSelect = (id, e) => {
     e.stopPropagation();
     setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
   };
 
   const selectAll = () => {
-    if (selectedIds.length === filteredProducts.length) {
+    setSelectedIds(
+      selectedIds.length === products.length ? [] : products.map((p) => p.id)
+    );
+  };
+
+  const confirmBulkUnarchive = async () => {
+    try {
+      await bulkUnarchive(selectedIds).unwrap();
+      toast.success(`${selectedIds.length} produits restaurés !`);
       setSelectedIds([]);
-    } else {
-      setSelectedIds(filteredProducts.map((p) => p.id));
+      setShowUnarchiveConfirm(false);
+    } catch {
+      toast.error("Erreur lors de la restauration");
     }
   };
 
-  const handleBulkUnarchive = async () => {
-    if (window.confirm(`Désarchiver ${selectedIds.length} produits ?`)) {
-      await bulkUnarchive(selectedIds);
+  const confirmBulkDelete = async () => {
+    try {
+      await bulkDelete(selectedIds).unwrap();
+      toast.success(`${selectedIds.length} produits supprimés !`);
       setSelectedIds([]);
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    if (
-      window.confirm(
-        `Supprimer définitivement ${selectedIds.length} produits ?`,
-      )
-    ) {
-      await bulkDelete(selectedIds);
-      setSelectedIds([]);
+      setShowDeleteConfirm(false);
+    } catch {
+      toast.error("Erreur lors de la suppression");
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 z-30">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-white border-b border-gray-200 px-4 py-4 sticky top-0 z-30">
+        <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate("/profile")}
+              onClick={onBack}
               className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition"
             >
-              <ArrowLeft className="w-6 h-6 text-gray-600" />
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
-            <h1 className="text-2xl font-bold text-gray-900">Archives</h1>
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">
+                {containerName}
+              </h2>
+              <p className="text-xs text-gray-400">
+                {products.length} produit{products.length !== 1 ? "s" : ""}
+              </p>
+            </div>
           </div>
-          <div className="bg-orange-100 px-3 py-1 rounded-full text-sm text-orange-600 font-medium">
-            {filteredProducts.length}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className={`p-2 hover:bg-gray-100 rounded-full transition ${isFetching ? 'animate-spin' : ''}`}
+            >
+              <RefreshCw className="w-5 h-5 text-gray-500" />
+            </button>
+            {isSelectionMode && (
+              <button
+                onClick={selectAll}
+                className="text-sm text-orange-600 font-medium"
+              >
+                {selectedIds.length === products.length
+                  ? "Désélectionner"
+                  : "Tout sélectionner"}
+              </button>
+            )}
           </div>
-        </div>
-
-        <div className="flex items-center justify-between mb-4">
-          {isSelectionMode ? (
-            <button
-              onClick={selectAll}
-              className="text-sm text-orange-600 font-medium"
-            >
-              {selectedIds.length === filteredProducts.length
-                ? "Tout désélectionner"
-                : "Tout sélectionner"}
-            </button>
-          ) : (
-            <span className="text-sm text-gray-500">
-              Gérez vos produits archivés
-            </span>
-          )}
-        </div>
-
-        {/* Search */}
-        <div className="relative">
-          <Search className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Rechercher dans les archives..."
-            className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
-          />
-        </div>
-
-        {/* Filter Chips */}
-        <div className="flex gap-2 mt-4 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
-          <button
-            onClick={() => setFilterType("all")}
-            className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all ${
-              filterType === "all"
-                ? "bg-orange-600 text-white shadow-md shadow-orange-200"
-                : "bg-gray-100 text-gray-700"
-            }`}
-          >
-            Tous
-          </button>
-          {Object.entries(typeLabels).map(([key, label]) => (
-            <button
-              key={key}
-              onClick={() => setFilterType(key)}
-              className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all flex items-center gap-2 ${
-                filterType === key
-                  ? "bg-orange-600 text-white shadow-md shadow-orange-200"
-                  : "bg-gray-100 text-gray-700"
-              }`}
-            >
-              <span>{typeIcons[key]}</span>
-              {label}
-            </button>
-          ))}
         </div>
       </div>
 
-      {/* Product Grid */}
-      <div className="p-6 grid grid-cols-2 gap-4">
-        {filteredProducts.map((product) => (
-          <div
-            key={product.id}
-            onClick={() => navigate(`/product/${product.id}`)}
-            className="bg-white rounded-2xl overflow-hidden shadow-sm active:scale-95 transition-transform group relative border border-gray-100"
-          >
-            <div className="relative aspect-square">
-              <img
-                src={
-                  Array.isArray(product.photo)
-                    ? product.photo[0] ||
-                      "https://via.placeholder.com/300?text=No+Image"
-                    : product.photo
-                }
-                alt={product.name}
-                className="w-full h-full object-cover grayscale-[0.5]"
-              />
-
-              {/* Selection Overlay */}
-              <div
-                onClick={(e) => toggleSelect(product.id, e)}
-                className="absolute inset-0 z-20 hover:bg-black/5 transition-colors"
-              >
+      {isFetching ? (
+        <div className="flex items-center justify-center py-20">
+          <div className="w-8 h-8 border-4 border-orange-400 border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : products.length === 0 ? (
+        <div className="text-center py-20 px-6">
+          <div className="bg-gray-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Archive className="w-10 h-10 text-gray-300" />
+          </div>
+          <p className="text-gray-500">Ce conteneur est vide</p>
+        </div>
+      ) : (
+        <div className="p-4 grid grid-cols-2 gap-3">
+          {products.map((product) => (
+            <div
+              key={product.id}
+              onClick={() => navigate(`/product/${product.id}`)}
+              className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 active:scale-95 transition-transform group relative"
+            >
+              <div className="relative aspect-square">
+                <img
+                  src={
+                    Array.isArray(product.photo)
+                      ? product.photo[0] ||
+                        "https://via.placeholder.com/300?text=No+Image"
+                      : product.photo ||
+                        "https://via.placeholder.com/300?text=No+Image"
+                  }
+                  alt={product.name}
+                  className="w-full h-full object-cover grayscale-[0.4]"
+                />
+                {/* Selection */}
                 <div
-                  className={`absolute top-2 left-2 p-1 rounded-full transition-all ${
-                    selectedIds.includes(product.id)
-                      ? "bg-orange-600 text-white scale-110 shadow-lg"
-                      : "bg-white/80 text-gray-400 opacity-0 group-hover:opacity-100 backdrop-blur-sm"
-                  }`}
+                  onClick={(e) => toggleSelect(product.id, e)}
+                  className="absolute inset-0 z-20"
                 >
-                  {selectedIds.includes(product.id) ? (
-                    <CheckCircle2 className="w-5 h-5" />
-                  ) : (
-                    <Circle className="w-5 h-5" />
-                  )}
+                  <div
+                    className={`absolute top-2 left-2 p-1 rounded-full transition-all ${
+                      selectedIds.includes(product.id)
+                        ? "bg-orange-600 text-white scale-110 shadow-lg"
+                        : "bg-white/80 text-gray-400 opacity-0 group-hover:opacity-100"
+                    }`}
+                  >
+                    {selectedIds.includes(product.id) ? (
+                      <CheckCircle2 className="w-5 h-5" />
+                    ) : (
+                      <Circle className="w-5 h-5" />
+                    )}
+                  </div>
+                </div>
+                <div className="absolute bottom-2 right-2 bg-gray-900/60 text-white text-[10px] px-2 py-0.5 rounded backdrop-blur-sm">
+                  ARCHIVÉ
                 </div>
               </div>
-
-              <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs z-1">
-                {typeIcons[product.type] || typeIcons.other}
-              </div>
-
-              <div className="absolute bottom-2 right-2 bg-gray-900/60 backdrop-blur-sm px-2 py-1 rounded text-[10px] text-white font-medium z-10">
-                ARCHIV\xC9
-              </div>
-            </div>
-            <div className="p-3">
-              <h3 className="text-sm text-gray-900 truncate mb-1 font-medium">
-                {product.name}
-              </h3>
-              <div className="text-orange-600 mb-1 font-bold">
-                {product.price} {product.currency}
-              </div>
-              <div className="text-xs text-gray-500">
-                {(product.convertedPrice / 1e3).toFixed(0)}K BIF
+              <div className="p-3">
+                <h3 className="text-sm font-medium text-gray-900 truncate">
+                  {product.name}
+                </h3>
+                <p className="text-orange-600 text-sm font-bold mt-0.5">
+                  {product.price} {product.currency}
+                </p>
+                <p className="text-[10px] text-gray-400 mt-1 truncate">
+                  {product.supplier_name || 'Sans fournisseur'}
+                </p>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Infinite Scroll Sentinel */}
-      {(hasMore || isFetching) && (
-        <div
-          ref={lastElementRef}
-          className="py-8 text-center text-gray-500 text-sm italic"
-        >
-          {isFetching
-            ? "Chargement des archives..."
-            : "Défiler pour charger plus"}
-        </div>
-      )}
-
-      {filteredProducts.length === 0 && !isFetching && (
-        <div className="text-center py-20 px-6">
-          <div className="bg-gray-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Archive className="w-12 h-12 text-gray-400" />
-          </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">
-            Aucun produit archivé
-          </h2>
-          <p className="text-gray-500">
-            Les produits que vous archivez apparaîtront ici.
-          </p>
+          ))}
         </div>
       )}
 
       {/* Bulk Action Bar */}
       {isSelectionMode && (
-        <div className="fixed bottom-6 left-4 right-4 bg-gray-900 text-white p-4 rounded-2xl shadow-2xl z-50 flex items-center justify-between animate-in slide-in-from-bottom duration-300">
+        <div className="fixed bottom-6 left-4 right-4 bg-gray-900 text-white p-4 rounded-2xl shadow-2xl z-50 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSelectedIds([])}
-              className="p-1 hover:bg-white/10 rounded-lg transition"
+              className="p-1 hover:bg-white/10 rounded-lg"
             >
               <X className="w-5 h-5" />
             </button>
-            <span className="font-medium">
-              {selectedIds.length} sélectionnés
-            </span>
+            <span className="font-medium">{selectedIds.length} sélectionnés</span>
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={handleBulkUnarchive}
-              className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition text-sm font-medium"
+              onClick={() => setShowUnarchiveConfirm(true)}
+              className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-sm font-medium"
             >
-              <RotateCcw className="w-4 h-4" />
-              Restaurer
+              <RotateCcw className="w-4 h-4" /> Restaurer
             </button>
             <button
-              onClick={handleBulkDelete}
-              className="flex items-center gap-2 bg-red-500 hover:bg-red-600 px-4 py-2 rounded-xl transition text-sm font-medium"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="flex items-center gap-2 bg-red-500 hover:bg-red-600 px-4 py-2 rounded-xl text-sm font-medium"
             >
-              <Trash2 className="w-4 h-4" />
-              Supprimer
+              <Trash2 className="w-4 h-4" /> Supprimer
             </button>
           </div>
+        </div>
+      )}
+
+
+      <AlertDialog open={showUnarchiveConfirm} onOpenChange={setShowUnarchiveConfirm}>
+        <AlertDialogContent className="w-11/12 max-w-md rounded-2xl bg-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Restaurer {selectedIds.length} produit(s) ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ces produits seront retirés du conteneur et redeviendront actifs.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-4 flex-row justify-end gap-2">
+            <AlertDialogCancel className="mt-0">Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmBulkUnarchive} className="bg-orange-600 hover:bg-orange-700 text-white">
+              Restaurer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent className="w-11/12 max-w-md rounded-2xl bg-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer {selectedIds.length} produit(s) ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-4 flex-row justify-end gap-2">
+            <AlertDialogCancel className="mt-0">Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmBulkDelete} className="bg-red-600 hover:bg-red-700 text-white">
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
+// ─── Main ArchiveList ────────────────────────────────────────────────────────
+export function ArchiveList() {
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedContainer, setSelectedContainer] = useState(null);
+  const { data: containers, isFetching, refetch } = useGetContainersQuery();
+
+  useEffect(() => {
+    refetch();
+  }, []);
+
+  const filtered = (containers || []).filter((c) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      c.name.toLowerCase().includes(q) ||
+      c.serial_number.toLowerCase().includes(q)
+    );
+  });
+
+  if (selectedContainer) {
+    return (
+      <ContainerProductsView
+        containerId={selectedContainer.id}
+        containerName={selectedContainer.name}
+        onBack={() => setSelectedContainer(null)}
+      />
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 pb-24">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-4 py-4 sticky top-0 z-30">
+        <div className="flex items-center gap-3 mb-4">
+          <button
+            onClick={() => navigate("/profile")}
+            className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition"
+          >
+            <ArrowLeft className="w-6 h-6 text-gray-600" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Archives</h1>
+            <p className="text-xs text-gray-400">
+              {filtered.length} conteneur{filtered.length !== 1 ? "s" : ""}
+            </p>
+          </div>
+          <button
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className={`ml-auto p-2 hover:bg-gray-100 rounded-full transition ${isFetching ? 'animate-spin' : ''}`}
+          >
+            <RefreshCw className="w-5 h-5 text-gray-500" />
+          </button>
+        </div>
+
+        {/* Search */}
+        <div className="relative">
+          <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Rechercher un conteneur..."
+            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+          />
+        </div>
+      </div>
+
+      {/* Content */}
+      {isFetching ? (
+        <div className="flex items-center justify-center py-20">
+          <div className="w-8 h-8 border-4 border-orange-400 border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-20 px-6">
+          <div className="bg-gray-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Archive className="w-12 h-12 text-gray-300" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
+            Aucun conteneur
+          </h2>
+          <p className="text-gray-500 text-sm">
+            Les produits archivés seront regroupés dans des conteneurs.
+          </p>
+        </div>
+      ) : (
+        <div className="p-4 space-y-3">
+          {filtered.map((container) => (
+            <ContainerCard
+              key={container.id}
+              container={container}
+              onClick={() => setSelectedContainer(container)}
+            />
+          ))}
         </div>
       )}
     </div>

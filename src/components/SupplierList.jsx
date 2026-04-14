@@ -18,6 +18,17 @@ import {
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "./ui/alert-dialog";
 
 export function SupplierList() {
   const navigate = useNavigate();
@@ -27,6 +38,7 @@ export function SupplierList() {
   const [lastPage, setLastPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
+  const [supplierToDelete, setSupplierToDelete] = useState(null);
 
   const fetchSuppliers = async (pageNum, search) => {
     setLoading(true);
@@ -65,17 +77,22 @@ export function SupplierList() {
     navigate(`/suppliers/edit/${supplier.id}`, { state: { supplier } });
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Êtes-vous sûr de vouloir supprimer ce fournisseur ?")) {
-      setLoading(true);
-      const result = await apiDelete(`/suppliers/${id}`);
-      if (result.success) {
-        fetchSuppliers(page);
-      } else {
-        alert("Erreur lors de la suppression: " + result.error);
-      }
-      setLoading(false);
+  const handleDelete = (id) => {
+    setSupplierToDelete(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!supplierToDelete) return;
+    setLoading(true);
+    const result = await apiDelete(`/suppliers/${supplierToDelete}`);
+    if (result.success) {
+      toast.success("Fournisseur supprimé");
+      fetchSuppliers(page);
+    } else {
+      toast.error("Erreur lors de la suppression: " + result.error);
     }
+    setLoading(false);
+    setSupplierToDelete(null);
   };
 
   return (
@@ -199,6 +216,21 @@ export function SupplierList() {
           </Button>
         </div>
       )}
+
+      <AlertDialog open={!!supplierToDelete} onOpenChange={() => setSupplierToDelete(null)}>
+        <AlertDialogContent className="w-11/12 max-w-md rounded-2xl bg-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer le fournisseur ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Êtes-vous sûr de vouloir supprimer ce fournisseur ?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-4 flex-row justify-end gap-2">
+            <AlertDialogCancel className="mt-0">Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700 text-white">Supprimer</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { ChevronLeft, Loader2, User, Mail, Phone, MapPin } from "lucide-react";
+import { toast } from "sonner";
 
 export function SupplierFormScreen() {
   const navigate = useNavigate();
@@ -82,7 +83,7 @@ export function SupplierFormScreen() {
         navigate("/suppliers");
       }
     } else {
-      alert("Erreur: " + result.error);
+      toast.error("Erreur: " + result.error);
     }
     setLoading(false);
   };

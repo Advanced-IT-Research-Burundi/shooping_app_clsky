@@ -9,6 +9,17 @@ import {
   Archive,
   X,
 } from "lucide-react";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "./ui/alert-dialog";
 import { useState } from "react";
 const typeIcons = {
   food: "\u{1F34E}",
@@ -28,6 +39,7 @@ import { useNavigate } from "react-router-dom";
 import {
   useBulkArchiveProductsMutation,
   useBulkDeleteProductsMutation,
+  useGetContainersQuery,
 } from "../features/auth/apiSlicer";
 
 export function ProductList(props) {
@@ -63,23 +75,82 @@ export function ProductList(props) {
     }
   };
 
-  const handleBulkArchive = async () => {
-    if (window.confirm(`Archiver ${selectedIds.length} produits ?`)) {
-      await bulkArchive(selectedIds);
+  const [showBulkArchiveModal, setShowBulkArchiveModal] = useState(false);
+  const [archiveMode, setArchiveMode] = useState("existing"); // "existing" | "new"
+  const [containerSearch, setContainerSearch] = useState("");
+  const [selectedContainerId, setSelectedContainerId] = useState(null);
+  const [archiveForm, setArchiveForm] = useState({
+    name: "",
+    serial_number: "",
+    description: "",
+  });
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isArchiving, setIsArchiving] = useState(false);
+
+  const { data: containersList } = useGetContainersQuery();
+
+  const confirmBulkArchive = async () => {
+    setIsArchiving(true);
+    try {
+      let archiveData = {};
+      if (archiveMode === "existing") {
+        if (!selectedContainerId) {
+          toast.error("Veuillez sélectionner un conteneur.");
+          setIsArchiving(false);
+          return;
+        }
+        const chosen = (containersList || []).find(
+          (c) => c.id === selectedContainerId,
+        );
+        if (!chosen) {
+          setIsArchiving(false);
+          return;
+        }
+        archiveData = {
+          name: chosen.name,
+          serial_number: chosen.serial_number,
+          description: chosen.description,
+        };
+      } else {
+        if (!archiveForm.name) {
+          toast.error("Le nom du conteneur est requis.");
+          setIsArchiving(false);
+          return;
+        }
+        if (!archiveForm.serial_number) {
+          toast.error("Le numéro de série du conteneur est requis.");
+          setIsArchiving(false);
+          return;
+        }
+        archiveData = archiveForm;
+      }
+
+      await bulkArchive({ ids: selectedIds, data: archiveData }).unwrap();
+      toast.success(`${selectedIds.length} produits archivés !`);
       setSelectedIds([]);
+      setShowBulkArchiveModal(false);
+      setArchiveForm({ name: "", serial_number: "", description: "" });
+      setSelectedContainerId(null);
+      setContainerSearch("");
+    } catch (err) {
+      toast.error("Erreur lors de l'archivage");
+    }
+    setIsArchiving(false);
+  };
+
+  const confirmBulkDelete = async () => {
+    try {
+      await bulkDelete(selectedIds).unwrap();
+      toast.success(`${selectedIds.length} produits supprimés !`);
+      setSelectedIds([]);
+      setShowDeleteConfirm(false);
+    } catch (err) {
+      toast.error("Erreur lors de la suppression");
     }
   };
 
-  const handleBulkDelete = async () => {
-    if (
-      window.confirm(
-        `Supprimer définitivement ${selectedIds.length} produits ?`,
-      )
-    ) {
-      await bulkDelete(selectedIds);
-      setSelectedIds([]);
-    }
-  };
+  const handleBulkArchive = () => setShowBulkArchiveModal(true);
+  const handleBulkDelete = () => setShowDeleteConfirm(true);
 
   const observer = useRef();
   const lastElementRef = useCallback(
@@ -234,8 +305,8 @@ export function ProductList(props) {
               <div className="text-orange-600 mb-1">
                 {product.price} {product.currency}
               </div>
-              <div className="text-xs text-gray-500">
-                {(product.convertedPrice / 1e3).toFixed(0)}K BIF
+              <div className="text-xs text-orange-600/70 mt-1 flex items-center gap-1 font-medium bg-orange-50 w-fit px-2 py-0.5 rounded-md">
+                <span className="truncate">{product.supplier_name || 'Sans fournisseur'}</span>
               </div>
               {product.packaging === "carton" && product.numberOfCartons && (
                 <div className="text-xs text-gray-500 mt-2 flex items-center gap-1">
@@ -300,6 +371,198 @@ export function ProductList(props) {
           </div>
         </div>
       )}
+
+      {showBulkArchiveModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-[60] p-4">
+          <div className="bg-white rounded-3xl w-full max-w-md p-6 space-y-4 animate-slide-up">
+            <div className="text-center">
+              <div className="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Archive className="w-8 h-8 text-orange-600" />
+              </div>
+              <h3 className="text-xl text-gray-900 mb-2">
+                Archiver {selectedIds.length} produits
+              </h3>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex bg-gray-100 rounded-xl p-1">
+              <button
+                onClick={() => setArchiveMode("existing")}
+                className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${
+                  archiveMode === "existing"
+                    ? "bg-white shadow text-gray-900"
+                    : "text-gray-500"
+                }`}
+              >
+                Existant
+              </button>
+              <button
+                onClick={() => setArchiveMode("new")}
+                className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${
+                  archiveMode === "new"
+                    ? "bg-white shadow text-gray-900"
+                    : "text-gray-500"
+                }`}
+              >
+                Nouveau
+              </button>
+            </div>
+
+            {/* Existing container picker */}
+            {archiveMode === "existing" && (
+              <div className="space-y-2">
+                <div className="relative">
+                  <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={containerSearch}
+                    onChange={(e) => setContainerSearch(e.target.value)}
+                    placeholder="Rechercher un conteneur..."
+                    className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                  />
+                </div>
+                <div className="max-h-48 overflow-y-auto space-y-1 rounded-xl border border-gray-100">
+                  {(containersList || [])
+                    .filter(
+                      (c) =>
+                        c.name
+                          .toLowerCase()
+                          .includes(containerSearch.toLowerCase()) ||
+                        c.serial_number
+                          .toLowerCase()
+                          .includes(containerSearch.toLowerCase()),
+                    )
+                    .map((c) => (
+                      <button
+                        key={c.id}
+                        onClick={() => setSelectedContainerId(c.id)}
+                        className={`w-full flex items-center justify-between px-4 py-3 text-left transition ${
+                          selectedContainerId === c.id
+                            ? "bg-orange-50 border-l-4 border-orange-500"
+                            : "hover:bg-gray-50"
+                        }`}
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">
+                            {c.name}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            #{c.serial_number} · {c.products_count} produit(s)
+                          </p>
+                        </div>
+                        {selectedContainerId === c.id && (
+                          <CheckCircle2 className="w-5 h-5 text-orange-500" />
+                        )}
+                      </button>
+                    ))}
+                  {(containersList || []).length === 0 && (
+                    <p className="text-center text-sm text-gray-400 py-4">
+                      Aucun conteneur existant
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* New container form */}
+            {archiveMode === "new" && (
+              <div className="space-y-3 text-left">
+                <div>
+                  <label className="text-sm text-gray-700 block mb-1">
+                    Nom du conteneur *
+                  </label>
+                  <input
+                    type="text"
+                    value={archiveForm.name}
+                    onChange={(e) =>
+                      setArchiveForm({ ...archiveForm, name: e.target.value })
+                    }
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    placeholder="Ex: Conteneur A"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-gray-700 block mb-1">
+                    Numéro de série *
+                  </label>
+                  <input
+                    type="text"
+                    value={archiveForm.serial_number}
+                    onChange={(e) =>
+                      setArchiveForm({
+                        ...archiveForm,
+                        serial_number: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    placeholder="Ex: CTN-1234"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-gray-700 block mb-1">
+                    Description
+                  </label>
+                  <textarea
+                    value={archiveForm.description}
+                    onChange={(e) =>
+                      setArchiveForm({
+                        ...archiveForm,
+                        description: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
+                    rows={2}
+                    placeholder="Détails..."
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3 mt-4">
+              <button
+                onClick={() => {
+                  setShowBulkArchiveModal(false);
+                  setSelectedContainerId(null);
+                  setContainerSearch("");
+                }}
+                className="py-3 bg-gray-100 text-gray-700 rounded-xl active:scale-95 transition"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={confirmBulkArchive}
+                disabled={isArchiving}
+                className="py-3 bg-orange-600 text-white rounded-xl active:scale-95 transition flex justify-center items-center gap-2"
+              >
+                {isArchiving ? "En cours..." : "Archiver"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent className="w-11/12 max-w-md rounded-2xl z-[60] bg-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Supprimer {selectedIds.length} produit(s) ?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Êtes-vous sûr de vouloir supprimer
+              définitivement ces produits ?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-4 flex-row justify-end space-x-2">
+            <AlertDialogCancel className="mt-0">Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmBulkDelete}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

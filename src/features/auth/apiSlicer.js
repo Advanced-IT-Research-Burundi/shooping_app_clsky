@@ -22,7 +22,7 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
 
 export const apiSlice = createApi({
   reducerPath: 'api',
-  tagTypes: ['Product', 'User'],
+  tagTypes: ['Product', 'User', 'Container'],
   baseQuery: baseQueryWithReauth,
   endpoints: (builder) => ({
     getData: builder.query({
@@ -86,26 +86,35 @@ export const apiSlice = createApi({
       invalidatesTags: (result, error, { id }) => [{ type: 'Product', id }, { type: 'Product', id: 'LIST' }],
     }),
     archiveProduct: builder.mutation({
-      query: (id) => ({
+      query: ({ id, data }) => ({
         url: `/products/${id}/archive`,
         method: 'POST',
+        body: data,
       }),
-      invalidatesTags: (result, error, id) => [{ type: 'Product', id }, { type: 'Product', id: 'LIST' }],
+      invalidatesTags: (result, error, { id }) => [
+        { type: 'Product', id }, 
+        { type: 'Product', id: 'LIST' },
+        { type: 'Container', id: 'LIST' }
+      ],
     }),
     unarchiveProduct: builder.mutation({
       query: (id) => ({
         url: `/products/${id}/unarchive`,
         method: 'POST',
       }),
-      invalidatesTags: (result, error, id) => [{ type: 'Product', id }, { type: 'Product', id: 'LIST' }],
+      invalidatesTags: (result, error, id) => [
+        { type: 'Product', id }, 
+        { type: 'Product', id: 'LIST' },
+        { type: 'Container', id: 'LIST' }
+      ],
     }),
     bulkArchiveProducts: builder.mutation({
-      query: (ids) => ({
+      query: ({ ids, data }) => ({
         url: '/products/bulk-archive',
         method: 'POST',
-        body: { ids },
+        body: { ids, ...data },
       }),
-      invalidatesTags: [{ type: 'Product', id: 'LIST' }],
+      invalidatesTags: [{ type: 'Product', id: 'LIST' }, { type: 'Container', id: 'LIST' }],
     }),
     bulkUnarchiveProducts: builder.mutation({
       query: (ids) => ({
@@ -113,7 +122,7 @@ export const apiSlice = createApi({
         method: 'POST',
         body: { ids },
       }),
-      invalidatesTags: [{ type: 'Product', id: 'LIST' }],
+      invalidatesTags: [{ type: 'Product', id: 'LIST' }, { type: 'Container', id: 'LIST' }],
     }),
     bulkDeleteProducts: builder.mutation({
       query: (ids) => ({
@@ -121,7 +130,7 @@ export const apiSlice = createApi({
         method: 'POST',
         body: { ids },
       }),
-      invalidatesTags: [{ type: 'Product', id: 'LIST' }],
+      invalidatesTags: [{ type: 'Product', id: 'LIST' }, { type: 'Container', id: 'LIST' }],
     }),
     getUsers: builder.query({
       query: () => '/users',
@@ -150,6 +159,20 @@ export const apiSlice = createApi({
       }),
       invalidatesTags: ['User'],
     }),
+    getContainers: builder.query({
+      query: () => '/containers',
+      providesTags: (result) => 
+        result 
+          ? [...result.map(({ id }) => ({ type: 'Container', id })), { type: 'Container', id: 'LIST' }]
+          : [{ type: 'Container', id: 'LIST' }],
+    }),
+    getContainerProducts: builder.query({
+      query: (id) => `/containers/${id}`,
+      providesTags: (result, error, id) => [{ type: 'Container', id }],
+    }),
+    getDevises: builder.query({
+      query: () => '/devises',
+    }),
   }),
 });
 
@@ -167,4 +190,7 @@ export const {
   useUpdateProfileMutation,
   useAddUserMutation,
   useUpdateUserDataMutation,
+  useGetContainersQuery,
+  useGetContainerProductsQuery,
+  useGetDevisesQuery,
 } = apiSlice;

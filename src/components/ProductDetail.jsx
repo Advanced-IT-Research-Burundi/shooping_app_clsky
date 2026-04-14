@@ -18,14 +18,24 @@ import {
   User,
   Archive,
   RotateCcw,
+  Search,
+  CheckCircle2,
 } from "lucide-react";
 import { SupplierSelect } from "./SupplierSelect";
 import { useState, useEffect, useRef } from "react";
-import { useParams, Navigate, useOutletContext, useNavigate } from "react-router-dom";
-import { 
+import {
+  useParams,
+  Navigate,
+  useOutletContext,
+  useNavigate,
+} from "react-router-dom";
+import { toast } from "sonner";
+import {
   useUpdateProductMutation,
   useArchiveProductMutation,
-  useUnarchiveProductMutation, 
+  useUnarchiveProductMutation,
+  useGetContainersQuery,
+  useGetDevisesQuery,
 } from "../features/auth/apiSlicer";
 
 const categories = [
@@ -35,15 +45,7 @@ const categories = [
   { id: 4, label: "Autres", icon: "\u{1F4E6}", value: "other" },
 ];
 
-const devises = [
-  { id: 1, code: "USD" },
-  //   { id: 2, code: "EUR" },
-  { id: 2, code: "BIF" },
-  { id: 3, code: "RMB" },
-  //   { id: 4, code: "GBP" },
-  //   { id: 5, code: "CAD" },
-  //   { id: 6, code: "JPY" },
-];
+// devises removed - now dynamic
 
 const packagingTypes = [
   { value: "unit", label: "Unit\xE9" },
@@ -67,8 +69,10 @@ export function ProductDetail(props) {
   const onEditContext = props.onEdit || context.onEdit;
 
   const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
-  const [archiveProduct, { isLoading: isArchiving }] = useArchiveProductMutation();
-  const [unarchiveProduct, { isLoading: isUnarchiving }] = useUnarchiveProductMutation();
+  const [archiveProduct, { isLoading: isArchiving }] =
+    useArchiveProductMutation();
+  const [unarchiveProduct, { isLoading: isUnarchiving }] =
+    useUnarchiveProductMutation();
   const navigate = useNavigate();
 
   // Resolve product: either from props or find by ID from params
@@ -78,13 +82,26 @@ export function ProductDetail(props) {
   }
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showArchiveModal, setShowArchiveModal] = useState(false);
+  const [archiveMode, setArchiveMode] = useState("existing"); // "existing" | "new"
+  const [containerSearch, setContainerSearch] = useState("");
+  const [selectedContainerId, setSelectedContainerId] = useState(null);
+  const [archiveForm, setArchiveForm] = useState({
+    name: "",
+    serial_number: "",
+    description: "",
+  });
   const [isEditing, setIsEditing] = useState(false);
+
+  const { data: containersList } = useGetContainersQuery();
 
   // Edit State
   const [editForm, setEditForm] = useState(null);
   const [newPhotos, setNewPhotos] = useState([]);
   const [newPhotoPreviews, setNewPhotoPreviews] = useState([]);
   const fileInputRef = useRef(null);
+
+  const { data: devisesList } = useGetDevisesQuery();
 
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
@@ -96,7 +113,7 @@ export function ProductDetail(props) {
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
-    alert("Lien copié !");
+    toast.success("Lien copié !");
   };
 
   const handleDownload = () => {
@@ -114,8 +131,10 @@ export function ProductDetail(props) {
       // Map category/type string to ID if possible or use defaults
       const currentCategory =
         categories.find((c) => c.value === product.type) || categories[3]; // Default other
-      const currentDevise =
-        devises.find((d) => d.code === product.currency) || devises[0]; // Default USD
+      const currentDevise = 
+        devisesList?.find((d) => d.id === product.devise_id) || 
+        devisesList?.find((d) => d.code === product.currency) || 
+        { id: "" };
 
       setEditForm({
         name: product.name,
@@ -136,7 +155,7 @@ export function ProductDetail(props) {
         supplier_id: product.supplier_id || "",
       });
     }
-  }, [product]);
+  }, [product, devisesList]);
 
   if (!product) {
     if (products.length === 0)
@@ -152,15 +171,52 @@ export function ProductDetail(props) {
     try {
       if (product.is_archived) {
         await unarchiveProduct(product.id).unwrap();
-        alert("Produit restaur\xE9 !");
+        toast.success("Produit restauré !");
       } else {
-        await archiveProduct(product.id).unwrap();
-        alert("Produit archiv\xE9 !");
-        navigate("/products");
+        setShowArchiveModal(true);
       }
     } catch (err) {
       console.error("Archive toggle failed", err);
-      alert("Une erreur est survenue");
+      toast.error("Une erreur est survenue");
+    }
+  };
+
+  const confirmArchive = async () => {
+    if (archiveMode === "existing") {
+      if (!selectedContainerId) {
+        toast.error("Veuillez sélectionner un conteneur.");
+        return;
+      }
+      const chosen = (containersList || []).find(c => c.id === selectedContainerId);
+      if (!chosen) return;
+      try {
+        await archiveProduct({
+          id: product.id,
+          data: { name: chosen.name, serial_number: chosen.serial_number, description: chosen.description }
+        }).unwrap();
+        toast.success("Produit archivé !");
+        setShowArchiveModal(false);
+        navigate("/products");
+      } catch {
+        toast.error("Une erreur est survenue lors de l'archivage");
+      }
+    } else {
+      if (!archiveForm.name) {
+        toast.error("Le nom du conteneur est requis.");
+        return;
+      }
+      if (!archiveForm.serial_number) {
+        toast.error("Le numéro de série du conteneur est requis.");
+        return;
+      }
+      try {
+        await archiveProduct({ id: product.id, data: archiveForm }).unwrap();
+        toast.success("Produit archivé !");
+        setShowArchiveModal(false);
+        navigate("/products");
+      } catch {
+        toast.error("Une erreur est survenue lors de l'archivage");
+      }
     }
   };
 
@@ -239,7 +295,7 @@ export function ProductDetail(props) {
       // Optional: manually trigger local update or refetch
     } catch (err) {
       console.error("Failed to update product", err);
-      alert("Erreur lors de la mise à jour");
+      toast.error("Erreur lors de la mise à jour");
     }
   };
 
@@ -392,7 +448,7 @@ export function ProductDetail(props) {
                 }
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
               >
-                {devises.map((d) => (
+                {(devisesList || []).map((d) => (
                   <option key={d.id} value={d.id}>
                     {d.code}
                   </option>
@@ -552,7 +608,7 @@ export function ProductDetail(props) {
           className="w-full h-80 object-cover cursor-pointer"
           onClick={() => {
             setPreviewImage(
-              Array.isArray(product.photo) ? product.photo[0] : product.photo
+              Array.isArray(product.photo) ? product.photo[0] : product.photo,
             );
             setIsPreviewOpen(true);
           }}
@@ -574,7 +630,7 @@ export function ProductDetail(props) {
         <button
           onClick={() => {
             setPreviewImage(
-              Array.isArray(product.photo) ? product.photo[0] : product.photo
+              Array.isArray(product.photo) ? product.photo[0] : product.photo,
             );
             setIsPreviewOpen(true);
           }}
@@ -753,6 +809,141 @@ export function ProductDetail(props) {
           </div>
         </div>
       </div>
+
+      {/* Archive Modal */}
+      {showArchiveModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl w-full max-w-md p-6 space-y-4">
+            {/* Header */}
+            <div className="text-center">
+              <div className="bg-blue-100 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Archive className="w-7 h-7 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900">Archiver dans un conteneur</h3>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex bg-gray-100 rounded-xl p-1">
+              <button
+                onClick={() => setArchiveMode("existing")}
+                className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${
+                  archiveMode === "existing" ? "bg-white shadow text-gray-900" : "text-gray-500"
+                }`}
+              >
+                Existant
+              </button>
+              <button
+                onClick={() => setArchiveMode("new")}
+                className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${
+                  archiveMode === "new" ? "bg-white shadow text-gray-900" : "text-gray-500"
+                }`}
+              >
+                Nouveau
+              </button>
+            </div>
+
+            {/* Existing container picker */}
+            {archiveMode === "existing" && (
+              <div className="space-y-2">
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={containerSearch}
+                    onChange={(e) => setContainerSearch(e.target.value)}
+                    placeholder="Rechercher un conteneur..."
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                </div>
+                <div className="max-h-48 overflow-y-auto space-y-1 rounded-xl border border-gray-100">
+                  {(containersList || [])
+                    .filter(c =>
+                      c.name.toLowerCase().includes(containerSearch.toLowerCase()) ||
+                      c.serial_number.toLowerCase().includes(containerSearch.toLowerCase())
+                    )
+                    .map(c => (
+                      <button
+                        key={c.id}
+                        onClick={() => setSelectedContainerId(c.id)}
+                        className={`w-full flex items-center justify-between px-4 py-3 text-left transition ${
+                          selectedContainerId === c.id
+                            ? "bg-blue-50 border-l-4 border-blue-500"
+                            : "hover:bg-gray-50"
+                        }`}
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{c.name}</p>
+                          <p className="text-xs text-gray-400">#{c.serial_number} · {c.products_count} produit(s)</p>
+                        </div>
+                        {selectedContainerId === c.id && (
+                          <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  {(containersList || []).length === 0 && (
+                    <p className="text-center text-sm text-gray-400 py-4">Aucun conteneur existant</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* New container form */}
+            {archiveMode === "new" && (
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm text-gray-700 block mb-1">Nom *</label>
+                  <input
+                    type="text"
+                    value={archiveForm.name}
+                    onChange={e => setArchiveForm({ ...archiveForm, name: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Ex: Conteneur A"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-gray-700 block mb-1">Numéro de série *</label>
+                  <input
+                    type="text"
+                    value={archiveForm.serial_number}
+                    onChange={e => setArchiveForm({ ...archiveForm, serial_number: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Ex: CTN-1234"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-gray-700 block mb-1">Description</label>
+                  <textarea
+                    value={archiveForm.description}
+                    onChange={e => setArchiveForm({ ...archiveForm, description: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                    rows={2}
+                    placeholder="Détails..."
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <button
+                onClick={() => { setShowArchiveModal(false); setSelectedContainerId(null); setContainerSearch(""); }}
+                className="py-3 bg-gray-100 text-gray-700 rounded-xl active:scale-95 transition"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={confirmArchive}
+                disabled={isArchiving}
+                className="py-3 bg-blue-600 text-white rounded-xl active:scale-95 transition flex justify-center items-center gap-2"
+              >
+                {isArchiving ? "En cours..." : "Archiver"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Modal */}
       {showDeleteConfirm && (

@@ -1,6 +1,16 @@
 import React, { useState } from "react";
-import { ArrowLeft, Bell, ShoppingCart, Mail, AlertTriangle, Trash2, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Bell, ShoppingCart, Mail, AlertTriangle, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "./ui/alert-dialog";
 
 const MOCK_NOTIFICATIONS = [
   {
@@ -37,14 +47,16 @@ export function NotificationsScreen() {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
 
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+
   const markAllRead = () => {
     setNotifications(notifications.map(n => ({ ...n, read: true })));
   };
 
-  const clearAll = () => {
-    if (window.confirm("Supprimer toutes les notifications ?")) {
-      setNotifications([]);
-    }
+  const clearAll = () => setShowClearConfirm(true);
+  const confirmClear = () => {
+    setNotifications([]);
+    setShowClearConfirm(false);
   };
 
   return (
@@ -132,6 +144,20 @@ export function NotificationsScreen() {
           Toutes vos notifications sont conservées pendant 30 jours.
         </div>
       )}
+      <AlertDialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
+        <AlertDialogContent className="w-11/12 max-w-md rounded-2xl bg-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer toutes les notifications ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action supprimera définitivement toutes vos notifications.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-4 flex-row justify-end gap-2">
+            <AlertDialogCancel className="mt-0">Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmClear} className="bg-red-600 hover:bg-red-700 text-white">Supprimer</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useGetProductsQuery } from "./features/auth/apiSlicer";
 import { selectToken, logout } from "./features/auth/authSlice";
 import { BottomNav } from "./components/BottomNav";
+import { Toaster } from "./components/ui/sonner";
 
 export default function App() {
   const token = useSelector(selectToken);
@@ -102,6 +103,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 max-w-md mx-auto relative">
+      <Toaster position="top-center" />
       <Outlet context={context} />
       <BottomNav
         currentScreen={currentScreen === "detail" ? "products" : currentScreen}

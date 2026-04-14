@@ -2,9 +2,11 @@ import { useState, useRef, useEffect } from "react";
 import { Camera, X, Upload, ChevronDown, AlertCircle } from "lucide-react";
 import { useOutletContext, useLocation } from "react-router-dom";
 import { SupplierSelect } from "./SupplierSelect";
-import { useAddProductMutation } from "../features/auth/apiSlicer";
+import { 
+  useAddProductMutation, 
+  useGetDevisesQuery 
+} from "../features/auth/apiSlicer";
 
-const currencies = ["USD", "BIF", "RMB"];
 const productTypes = [
   { value: "food", label: "Alimentaire", icon: "\u{1F34E}" },
   { value: "electronics", label: "\xC9lectronique", icon: "\u{1F4F1}" },
@@ -33,7 +35,7 @@ export function AddPurchase(props) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
-  const [currency, setCurrency] = useState("RMB");
+  const [deviseId, setDeviseId] = useState("");
   const [rmbToUsd, setRmbToUsd] = useState("");
   const [usdToBif, setUsdToBif] = useState("");
   const [type, setType] = useState("other");
@@ -41,6 +43,22 @@ export function AddPurchase(props) {
   const [piecesPerCarton, setPiecesPerCarton] = useState("");
   const [numberOfCartons, setNumberOfCartons] = useState("");
   const [supplierId, setSupplierId] = useState("");
+
+  const { data: devisesList } = useGetDevisesQuery();
+  const currencies = devisesList ? devisesList.map((d) => d.code) : [];
+  
+  // Helper to get currency code from current deviseId
+  const selectedDevise = devisesList?.find(d => d.id.toString() === deviseId.toString());
+  const currency = selectedDevise?.code || "";
+
+  // Initialize deviseId if not set
+  useEffect(() => {
+    if (devisesList && devisesList.length > 0 && !deviseId) {
+      // Try to match "RMB" default if it exists, otherwise use first
+      const rmbDevise = devisesList.find(d => d.code === "RMB");
+      setDeviseId(rmbDevise ? rmbDevise.id.toString() : devisesList[0].id.toString());
+    }
+  }, [devisesList, deviseId]);
 
   const STORAGE_KEY = "add_purchase_form_state";
 
@@ -52,7 +70,7 @@ export function AddPurchase(props) {
       setName(state.name || "");
       setDescription(state.description || "");
       setPrice(state.price || "");
-      setCurrency(state.currency || "RMB");
+      setDeviseId(state.deviseId || "");
       setRmbToUsd(state.rmbToUsd || "");
       setUsdToBif(state.usdToBif || "");
       setType(state.type || "other");
@@ -62,7 +80,7 @@ export function AddPurchase(props) {
       setSupplierId(state.supplierId || "");
       // Note: We can't easily persist photoFile, and we won't persist the photo preview (Base64) to avoid QuotaExceededError on mobile
     }
-  }, []);
+  }, [devisesList]); // Add devisesList dependency to ensure we wait for it if needed for initialization logic if any
 
   // Persistence: Save on change
   useEffect(() => {
@@ -70,7 +88,7 @@ export function AddPurchase(props) {
       name,
       description,
       price,
-      currency,
+      deviseId,
       rmbToUsd,
       usdToBif,
       type,
@@ -84,7 +102,7 @@ export function AddPurchase(props) {
     name,
     description,
     price,
-    currency,
+    deviseId,
     rmbToUsd,
     usdToBif,
     type,
@@ -114,8 +132,8 @@ export function AddPurchase(props) {
   const currentRmbToUsd = parseFloat(rmbToUsd) || DEFAULT_RMB_TO_USD;
   const currentUsdToBif = parseFloat(usdToBif) || DEFAULT_USD_TO_BIF;
 
-  const handleCurrencyChange = (newCurrency) => {
-    setCurrency(newCurrency);
+  const handleDeviseChange = (newId) => {
+    setDeviseId(newId);
   };
 
   // Values in all 3 currencies
@@ -173,7 +191,8 @@ export function AddPurchase(props) {
       formData.append("name", name);
       formData.append("description", description);
       formData.append("price", price);
-      formData.append("currency", currency);
+      formData.append("devise_id", deviseId);
+      formData.append("currency", currency); // Keep for legacy/info if needed
       formData.append("exchange_rate", effectiveExchangeRate);
       formData.append("type", type);
       formData.append("packaging", packaging);
@@ -358,13 +377,13 @@ export function AddPurchase(props) {
               </label>
               <div className="relative">
                 <select
-                  value={currency}
-                  onChange={(e) => handleCurrencyChange(e.target.value)}
+                  value={deviseId}
+                  onChange={(e) => handleDeviseChange(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 appearance-none bg-white"
                 >
-                  {currencies.map((curr) => (
-                    <option key={curr} value={curr}>
-                      {curr}
+                  {(devisesList || []).map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.code}
                     </option>
                   ))}
                 </select>
@@ -410,39 +429,34 @@ export function AddPurchase(props) {
 
           <div className="bg-orange-50 rounded-2xl p-4 border border-orange-100 flex flex-col gap-3">
             <div className="text-sm text-gray-600 font-medium">
-              Récapitulatif des conversions
+              Récapitulatif des conversions (Estimation)
             </div>
             <div className="grid grid-cols-3 gap-2">
-              <div className="bg-white/50 p-2 rounded-xl">
-                <div className="text-[10px] text-gray-500 uppercase font-bold">
-                  BIF
+              {/* Note: We keep BIF, USD, RMB as the main standard recap if they exist in the system */}
+              {currencies.includes("BIF") && (
+                <div className="bg-white/50 p-2 rounded-xl">
+                  <div className="text-[10px] text-gray-500 uppercase font-bold">BIF</div>
+                  <div className="text-sm font-bold text-orange-600">
+                    {totalBIF.toLocaleString("fr-FR", { maximumFractionDigits: 0 })}
+                  </div>
                 </div>
-                <div className="text-sm font-bold text-orange-600">
-                  {totalBIF.toLocaleString("fr-FR", {
-                    maximumFractionDigits: 0,
-                  })}
+              )}
+              {currencies.includes("USD") && (
+                <div className="bg-white/50 p-2 rounded-xl">
+                  <div className="text-[10px] text-gray-500 uppercase font-bold">USD</div>
+                  <div className="text-sm font-bold text-orange-600">
+                    {totalUSD.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}
+                  </div>
                 </div>
-              </div>
-              <div className="bg-white/50 p-2 rounded-xl">
-                <div className="text-[10px] text-gray-500 uppercase font-bold">
-                  USD
+              )}
+              {currencies.includes("RMB") && (
+                <div className="bg-white/50 p-2 rounded-xl">
+                  <div className="text-[10px] text-gray-500 uppercase font-bold">RMB</div>
+                  <div className="text-sm font-bold text-orange-600">
+                    {totalRMB.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}
+                  </div>
                 </div>
-                <div className="text-sm font-bold text-orange-600">
-                  {totalUSD.toLocaleString("fr-FR", {
-                    maximumFractionDigits: 2,
-                  })}
-                </div>
-              </div>
-              <div className="bg-white/50 p-2 rounded-xl">
-                <div className="text-[10px] text-gray-500 uppercase font-bold">
-                  RMB
-                </div>
-                <div className="text-sm font-bold text-orange-600">
-                  {totalRMB.toLocaleString("fr-FR", {
-                    maximumFractionDigits: 2,
-                  })}
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
