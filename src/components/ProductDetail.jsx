@@ -20,6 +20,7 @@ import {
   RotateCcw,
   Search,
   CheckCircle2,
+  ChevronDown,
 } from "lucide-react";
 import { SupplierSelect } from "./SupplierSelect";
 import { useState, useEffect, useRef } from "react";
@@ -131,10 +132,10 @@ export function ProductDetail(props) {
       // Map category/type string to ID if possible or use defaults
       const currentCategory =
         categories.find((c) => c.value === product.type) || categories[3]; // Default other
-      const currentDevise = 
-        devisesList?.find((d) => d.id === product.devise_id) || 
-        devisesList?.find((d) => d.code === product.currency) || 
-        { id: "" };
+      const currentDevise = devisesList?.find(
+        (d) => d.id === product.devise_id,
+      ) ||
+        devisesList?.find((d) => d.code === product.currency) || { id: "" };
 
       setEditForm({
         name: product.name,
@@ -153,6 +154,9 @@ export function ProductDetail(props) {
         numberOfCartons:
           product.numberOfCartons || product.number_of_cartons || "",
         supplier_id: product.supplier_id || "",
+        customs_price: product.customs_price || "",
+        customs_price_currency: product.customs_price_currency || "USD",
+        cbm: product.cbm || "",
       });
     }
   }, [product, devisesList]);
@@ -187,12 +191,18 @@ export function ProductDetail(props) {
         toast.error("Veuillez sélectionner un conteneur.");
         return;
       }
-      const chosen = (containersList || []).find(c => c.id === selectedContainerId);
+      const chosen = (containersList || []).find(
+        (c) => c.id === selectedContainerId,
+      );
       if (!chosen) return;
       try {
         await archiveProduct({
           id: product.id,
-          data: { name: chosen.name, serial_number: chosen.serial_number, description: chosen.description }
+          data: {
+            name: chosen.name,
+            serial_number: chosen.serial_number,
+            description: chosen.description,
+          },
         }).unwrap();
         toast.success("Produit archivé !");
         setShowArchiveModal(false);
@@ -257,6 +267,12 @@ export function ProductDetail(props) {
       formData.append("devise_id", editForm.devise_id);
       if (editForm.supplier_id)
         formData.append("supplier_id", editForm.supplier_id);
+      formData.append("customs_price", editForm.customs_price || 0);
+      formData.append(
+        "customs_price_currency",
+        editForm.customs_price_currency,
+      );
+      formData.append("cbm", editForm.cbm || 0);
 
       // Append new photos
       // 'photos[]' or just 'photo' depending on backend. User said "ajouter plus des photos", usually 'photos' array.
@@ -454,6 +470,61 @@ export function ProductDetail(props) {
                   </option>
                 ))}
               </select>
+            </div>
+          </div>
+
+          {/* Volume & CBM */}
+          <div>
+            <label className="text-sm text-gray-700 mb-2 block font-medium">
+              Volume Total (CBM - m³)
+            </label>
+            <input
+              type="number"
+              step="0.0001"
+              value={editForm.cbm}
+              onChange={(e) =>
+                setEditForm({ ...editForm, cbm: e.target.value })
+              }
+              placeholder="0.0000"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+            />
+          </div>
+
+          {/* Customs Price & Currency */}
+          <div>
+            <label className="text-sm text-gray-700 mb-2 block font-medium">
+              Prix de dédouanement (Unitaire)
+            </label>
+            <div className="flex gap-2">
+              <div className="flex-[2] relative">
+                <input
+                  type="number"
+                  step="0.01"
+                  value={editForm.customs_price}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, customs_price: e.target.value })
+                  }
+                  placeholder="0.00"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+              <div className="flex-1 relative">
+                <select
+                  value={editForm.customs_price_currency}
+                  onChange={(e) =>
+                    setEditForm({
+                      ...editForm,
+                      customs_price_currency: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 appearance-none bg-white font-bold text-orange-600"
+                >
+                  <option value="USD">USD</option>
+                  <option value="RMB">RMB</option>
+                  <option value="BIF">BIF</option>
+                </select>
+                <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
             </div>
           </div>
 
@@ -741,6 +812,33 @@ export function ProductDetail(props) {
           </div>
 
           <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
+            <div className="bg-red-50 p-3 rounded-xl">
+              <DollarSign className="w-5 h-5 text-red-600" />
+            </div>
+            <div>
+              <div className="text-sm text-gray-500">Dédouanement</div>
+              <div className="text-gray-900 font-bold">
+                {product.customs_price?.toLocaleString("fr-FR", {
+                  minimumFractionDigits: 2,
+                })}{" "}
+                {product.customs_price_currency || product.currency}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
+            <div className="bg-purple-100 p-3 rounded-xl">
+              <Maximize2 className="w-5 h-5 text-purple-600" />
+            </div>
+            <div>
+              <div className="text-sm text-gray-500">CBM - Volume Total</div>
+              <div className="text-gray-900 font-bold">
+                {product.cbm || "0.0000"} m³
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
             <div className="bg-orange-100 p-3 rounded-xl">
               <Package className="w-5 h-5 text-orange-600" />
             </div>
@@ -819,7 +917,9 @@ export function ProductDetail(props) {
               <div className="bg-blue-100 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3">
                 <Archive className="w-7 h-7 text-blue-600" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900">Archiver dans un conteneur</h3>
+              <h3 className="text-xl font-semibold text-gray-900">
+                Archiver dans un conteneur
+              </h3>
             </div>
 
             {/* Tabs */}
@@ -827,7 +927,9 @@ export function ProductDetail(props) {
               <button
                 onClick={() => setArchiveMode("existing")}
                 className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${
-                  archiveMode === "existing" ? "bg-white shadow text-gray-900" : "text-gray-500"
+                  archiveMode === "existing"
+                    ? "bg-white shadow text-gray-900"
+                    : "text-gray-500"
                 }`}
               >
                 Existant
@@ -835,7 +937,9 @@ export function ProductDetail(props) {
               <button
                 onClick={() => setArchiveMode("new")}
                 className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${
-                  archiveMode === "new" ? "bg-white shadow text-gray-900" : "text-gray-500"
+                  archiveMode === "new"
+                    ? "bg-white shadow text-gray-900"
+                    : "text-gray-500"
                 }`}
               >
                 Nouveau
@@ -856,11 +960,16 @@ export function ProductDetail(props) {
                 </div>
                 <div className="max-h-48 overflow-y-auto space-y-1 rounded-xl border border-gray-100">
                   {(containersList || [])
-                    .filter(c =>
-                      c.name.toLowerCase().includes(containerSearch.toLowerCase()) ||
-                      c.serial_number.toLowerCase().includes(containerSearch.toLowerCase())
+                    .filter(
+                      (c) =>
+                        c.name
+                          .toLowerCase()
+                          .includes(containerSearch.toLowerCase()) ||
+                        c.serial_number
+                          .toLowerCase()
+                          .includes(containerSearch.toLowerCase()),
                     )
-                    .map(c => (
+                    .map((c) => (
                       <button
                         key={c.id}
                         onClick={() => setSelectedContainerId(c.id)}
@@ -871,20 +980,36 @@ export function ProductDetail(props) {
                         }`}
                       >
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{c.name}</p>
-                          <p className="text-xs text-gray-400">#{c.serial_number} · {c.products_count} produit(s)</p>
+                          <p className="text-sm font-medium text-gray-900">
+                            {c.name}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            #{c.serial_number} · {c.products_count} produit(s)
+                          </p>
                         </div>
                         {selectedContainerId === c.id && (
                           <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
-                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            <svg
+                              className="w-3 h-3 text-white"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={3}
+                                d="M5 13l4 4L19 7"
+                              />
                             </svg>
                           </div>
                         )}
                       </button>
                     ))}
                   {(containersList || []).length === 0 && (
-                    <p className="text-center text-sm text-gray-400 py-4">Aucun conteneur existant</p>
+                    <p className="text-center text-sm text-gray-400 py-4">
+                      Aucun conteneur existant
+                    </p>
                   )}
                 </div>
               </div>
@@ -894,30 +1019,48 @@ export function ProductDetail(props) {
             {archiveMode === "new" && (
               <div className="space-y-3">
                 <div>
-                  <label className="text-sm text-gray-700 block mb-1">Nom *</label>
+                  <label className="text-sm text-gray-700 block mb-1">
+                    Nom *
+                  </label>
                   <input
                     type="text"
                     value={archiveForm.name}
-                    onChange={e => setArchiveForm({ ...archiveForm, name: e.target.value })}
+                    onChange={(e) =>
+                      setArchiveForm({ ...archiveForm, name: e.target.value })
+                    }
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Ex: Conteneur A"
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-gray-700 block mb-1">Numéro de série *</label>
+                  <label className="text-sm text-gray-700 block mb-1">
+                    Numéro de série *
+                  </label>
                   <input
                     type="text"
                     value={archiveForm.serial_number}
-                    onChange={e => setArchiveForm({ ...archiveForm, serial_number: e.target.value })}
+                    onChange={(e) =>
+                      setArchiveForm({
+                        ...archiveForm,
+                        serial_number: e.target.value,
+                      })
+                    }
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Ex: CTN-1234"
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-gray-700 block mb-1">Description</label>
+                  <label className="text-sm text-gray-700 block mb-1">
+                    Description
+                  </label>
                   <textarea
                     value={archiveForm.description}
-                    onChange={e => setArchiveForm({ ...archiveForm, description: e.target.value })}
+                    onChange={(e) =>
+                      setArchiveForm({
+                        ...archiveForm,
+                        description: e.target.value,
+                      })
+                    }
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                     rows={2}
                     placeholder="Détails..."
@@ -928,7 +1071,11 @@ export function ProductDetail(props) {
 
             <div className="grid grid-cols-2 gap-3 pt-2">
               <button
-                onClick={() => { setShowArchiveModal(false); setSelectedContainerId(null); setContainerSearch(""); }}
+                onClick={() => {
+                  setShowArchiveModal(false);
+                  setSelectedContainerId(null);
+                  setContainerSearch("");
+                }}
                 className="py-3 bg-gray-100 text-gray-700 rounded-xl active:scale-95 transition"
               >
                 Annuler

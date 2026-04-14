@@ -43,16 +43,18 @@ function ContainerCard({ container, onClick }) {
       {/* Photo Strip */}
       <div className="flex h-28 overflow-hidden bg-gray-100">
         {photos.length > 0 ? (
-          photos.slice(0, 3).map((url, i) => (
-            <img
-              key={i}
-              src={url}
-              alt=""
-              className={`object-cover flex-1 min-w-0 ${
-                i > 0 ? "border-l border-white/40" : ""
-              } ${photos.length === 1 ? "" : ""}`}
-            />
-          ))
+          photos
+            .slice(0, 3)
+            .map((url, i) => (
+              <img
+                key={i}
+                src={url}
+                alt=""
+                className={`object-cover flex-1 min-w-0 ${
+                  i > 0 ? "border-l border-white/40" : ""
+                } ${photos.length === 1 ? "" : ""}`}
+              />
+            ))
         ) : (
           <div className="flex-1 flex items-center justify-center">
             <Box className="w-12 h-12 text-gray-300" />
@@ -88,9 +90,10 @@ function ContainerCard({ container, onClick }) {
 
 // ─── Products In Container View ──────────────────────────────────────────────
 function ContainerProductsView({ containerId, containerName, onBack }) {
-  const { data, isFetching, refetch } = useGetContainerProductsQuery(containerId);
+  const { data, isFetching, refetch } =
+    useGetContainerProductsQuery(containerId);
   const [selectedIds, setSelectedIds] = useState([]);
-  
+
   useEffect(() => {
     refetch();
   }, []);
@@ -106,13 +109,13 @@ function ContainerProductsView({ containerId, containerName, onBack }) {
   const toggleSelect = (id, e) => {
     e.stopPropagation();
     setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     );
   };
 
   const selectAll = () => {
     setSelectedIds(
-      selectedIds.length === products.length ? [] : products.map((p) => p.id)
+      selectedIds.length === products.length ? [] : products.map((p) => p.id),
     );
   };
 
@@ -122,6 +125,7 @@ function ContainerProductsView({ containerId, containerName, onBack }) {
       toast.success(`${selectedIds.length} produits restaurés !`);
       setSelectedIds([]);
       setShowUnarchiveConfirm(false);
+      refetch();
     } catch {
       toast.error("Erreur lors de la restauration");
     }
@@ -133,6 +137,7 @@ function ContainerProductsView({ containerId, containerName, onBack }) {
       toast.success(`${selectedIds.length} produits supprimés !`);
       setSelectedIds([]);
       setShowDeleteConfirm(false);
+      refetch();
     } catch {
       toast.error("Erreur lors de la suppression");
     }
@@ -163,7 +168,7 @@ function ContainerProductsView({ containerId, containerName, onBack }) {
             <button
               onClick={() => refetch()}
               disabled={isFetching}
-              className={`p-2 hover:bg-gray-100 rounded-full transition ${isFetching ? 'animate-spin' : ''}`}
+              className={`p-2 hover:bg-gray-100 rounded-full transition ${isFetching ? "animate-spin" : ""}`}
             >
               <RefreshCw className="w-5 h-5 text-gray-500" />
             </button>
@@ -243,7 +248,7 @@ function ContainerProductsView({ containerId, containerName, onBack }) {
                   {product.price} {product.currency}
                 </p>
                 <p className="text-[10px] text-gray-400 mt-1 truncate">
-                  {product.supplier_name || 'Sans fournisseur'}
+                  {product.supplier_name || "Sans fournisseur"}
                 </p>
               </div>
             </div>
@@ -261,7 +266,9 @@ function ContainerProductsView({ containerId, containerName, onBack }) {
             >
               <X className="w-5 h-5" />
             </button>
-            <span className="font-medium">{selectedIds.length} sélectionnés</span>
+            <span className="font-medium">
+              {selectedIds.length} sélectionnés
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -280,18 +287,25 @@ function ContainerProductsView({ containerId, containerName, onBack }) {
         </div>
       )}
 
-
-      <AlertDialog open={showUnarchiveConfirm} onOpenChange={setShowUnarchiveConfirm}>
+      <AlertDialog
+        open={showUnarchiveConfirm}
+        onOpenChange={setShowUnarchiveConfirm}
+      >
         <AlertDialogContent className="w-11/12 max-w-md rounded-2xl bg-white">
           <AlertDialogHeader>
-            <AlertDialogTitle>Restaurer {selectedIds.length} produit(s) ?</AlertDialogTitle>
+            <AlertDialogTitle>
+              Restaurer {selectedIds.length} produit(s) ?
+            </AlertDialogTitle>
             <AlertDialogDescription>
               Ces produits seront retirés du conteneur et redeviendront actifs.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-4 flex-row justify-end gap-2">
             <AlertDialogCancel className="mt-0">Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmBulkUnarchive} className="bg-orange-600 hover:bg-orange-700 text-white">
+            <AlertDialogAction
+              onClick={confirmBulkUnarchive}
+              className="bg-orange-600 hover:bg-orange-700 text-white"
+            >
               Restaurer
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -301,14 +315,19 @@ function ContainerProductsView({ containerId, containerName, onBack }) {
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent className="w-11/12 max-w-md rounded-2xl bg-white">
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer {selectedIds.length} produit(s) ?</AlertDialogTitle>
+            <AlertDialogTitle>
+              Supprimer {selectedIds.length} produit(s) ?
+            </AlertDialogTitle>
             <AlertDialogDescription>
               Cette action est irréversible.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-4 flex-row justify-end gap-2">
             <AlertDialogCancel className="mt-0">Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmBulkDelete} className="bg-red-600 hover:bg-red-700 text-white">
+            <AlertDialogAction
+              onClick={confirmBulkDelete}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
               Supprimer
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -367,7 +386,7 @@ export function ArchiveList() {
           <button
             onClick={() => refetch()}
             disabled={isFetching}
-            className={`ml-auto p-2 hover:bg-gray-100 rounded-full transition ${isFetching ? 'animate-spin' : ''}`}
+            className={`ml-auto p-2 hover:bg-gray-100 rounded-full transition ${isFetching ? "animate-spin" : ""}`}
           >
             <RefreshCw className="w-5 h-5 text-gray-500" />
           </button>
