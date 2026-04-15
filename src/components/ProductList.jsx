@@ -9,6 +9,7 @@ import {
   Archive,
   X,
   ChevronDown,
+  Receipt,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -22,6 +23,7 @@ import {
   AlertDialogTitle,
 } from "./ui/alert-dialog";
 import { useState } from "react";
+import { AddDepenseModal } from "./AddDepenseModal";
 const typeIcons = {
   food: "\u{1F34E}",
   electronics: "\u{1F4F1}",
@@ -54,6 +56,7 @@ export function ProductList(props) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [selectedIds, setSelectedIds] = useState([]);
+  const [depenseOpen, setDepenseOpen] = useState(false);
   const navigate = useNavigate();
 
   const [bulkArchive] = useBulkArchiveProductsMutation();
@@ -198,14 +201,19 @@ export function ProductList(props) {
             </button>
           )}
         </div>
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl text-gray-900"></h1>
-
+        <div className="flex items-center justify-between mb-4 gap-2">
           <button
-            className="bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700 transition-colors"
+            className="bg-orange-600 text-white px-4 py-2 rounded-full text-sm transition-colors active:scale-95 flex items-center gap-2"
+            onClick={() => setDepenseOpen(true)}
+          >
+            <Receipt className="w-4 h-4" />
+            Dépenses
+          </button>
+          <button
+            className="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm transition-colors active:scale-95"
             onClick={() => navigate("/suppliers")}
           >
-            Listes des fournisseurs
+            Fournisseurs
           </button>
         </div>
 
@@ -612,6 +620,12 @@ export function ProductList(props) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AddDepenseModal
+        open={depenseOpen}
+        onClose={() => setDepenseOpen(false)}
+        products={products}
+      />
     </div>
   );
 }

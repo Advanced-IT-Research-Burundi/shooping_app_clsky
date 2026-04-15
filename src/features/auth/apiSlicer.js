@@ -22,7 +22,7 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
 
 export const apiSlice = createApi({
   reducerPath: 'api',
-  tagTypes: ['Product', 'User', 'Container'],
+  tagTypes: ['Product', 'User', 'Container', 'Depense'],
   baseQuery: baseQueryWithReauth,
   endpoints: (builder) => ({
     getData: builder.query({
@@ -177,6 +177,27 @@ export const apiSlice = createApi({
       query: () => "/suppliers",
       transformResponse: (response) => response.data || response,
     }),
+    getDepenses: builder.query({
+      query: (productId) =>
+        productId ? `/products/${productId}/depenses` : '/depenses',
+      transformResponse: (r) => (Array.isArray(r) ? r : []),
+      providesTags: (result) =>
+        result
+          ? [...result.map(({ id }) => ({ type: 'Depense', id })), { type: 'Depense', id: 'LIST' }]
+          : [{ type: 'Depense', id: 'LIST' }],
+    }),
+    addDepense: builder.mutation({
+      query: (body) => ({ url: '/depenses', method: 'POST', body }),
+      invalidatesTags: [{ type: 'Depense', id: 'LIST' }],
+    }),
+    updateDepense: builder.mutation({
+      query: ({ id, ...body }) => ({ url: `/depenses/${id}`, method: 'PUT', body }),
+      invalidatesTags: (_r, _e, { id }) => [{ type: 'Depense', id }],
+    }),
+    deleteDepense: builder.mutation({
+      query: (id) => ({ url: `/depenses/${id}`, method: 'DELETE' }),
+      invalidatesTags: [{ type: 'Depense', id: 'LIST' }],
+    }),
     getReports: builder.query({
       query: (params = {}) => {
         const queryParams = new URLSearchParams();
@@ -219,4 +240,8 @@ export const {
   useGetDevisesQuery,
   useGetSuppliersQuery,
   useGetReportsQuery,
+  useGetDepensesQuery,
+  useAddDepenseMutation,
+  useUpdateDepenseMutation,
+  useDeleteDepenseMutation,
 } = apiSlice;
