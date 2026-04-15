@@ -56,7 +56,7 @@ export function ProductList(props) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [selectedIds, setSelectedIds] = useState([]);
-  const [depenseOpen, setDepenseOpen] = useState(false);
+  const [depenseTarget, setDepenseTarget] = useState(null); // { id, name }
   const navigate = useNavigate();
 
   const [bulkArchive] = useBulkArchiveProductsMutation();
@@ -202,13 +202,7 @@ export function ProductList(props) {
           )}
         </div>
         <div className="flex items-center justify-between mb-4 gap-2">
-          <button
-            className="bg-orange-600 text-white px-4 py-2 rounded-full text-sm transition-colors active:scale-95 flex items-center gap-2"
-            onClick={() => setDepenseOpen(true)}
-          >
-            <Receipt className="w-4 h-4" />
-            Dépenses
-          </button>
+          <div className="w-10" />
           <button
             className="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm transition-colors active:scale-95"
             onClick={() => navigate("/suppliers")}
@@ -319,10 +313,22 @@ export function ProductList(props) {
                 </span>
               </div>
 
-              {/* Supplier */}
-              <span className="text-[11px] text-orange-700/90 font-medium bg-orange-50 px-2 py-0.5 rounded-md border border-orange-100 self-start truncate max-w-[140px]">
-                {product.supplier_name || "Sans fournisseur"}
-              </span>
+              {/* Supplier + Dépense button */}
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-[11px] text-orange-700/90 font-medium bg-orange-50 px-2 py-0.5 rounded-md border border-orange-100 truncate max-w-[110px]">
+                  {product.supplier_name || "Sans fournisseur"}
+                </span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDepenseTarget({ id: product.id, name: product.name });
+                  }}
+                  className="flex items-center gap-1 bg-orange-100 text-orange-600 px-2 py-0.5 rounded-md border border-orange-200 text-[11px] font-semibold active:scale-95 transition shrink-0"
+                >
+                  <Receipt className="w-3 h-3" />
+                  Dépense
+                </button>
+              </div>
 
               {/* Bottom row: price + totals */}
               <div className="flex items-end justify-between gap-1 mt-1">
@@ -622,8 +628,10 @@ export function ProductList(props) {
       </AlertDialog>
 
       <AddDepenseModal
-        open={depenseOpen}
-        onClose={() => setDepenseOpen(false)}
+        open={!!depenseTarget}
+        onClose={() => setDepenseTarget(null)}
+        productId={depenseTarget?.id}
+        productName={depenseTarget?.name}
         products={products}
       />
     </div>
