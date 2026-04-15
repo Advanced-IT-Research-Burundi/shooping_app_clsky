@@ -32,7 +32,17 @@ export default function App() {
 
   // State for infinite scroll pagination
   const [page, setPage] = useState(1);
-  const { data: apiData, isFetching } = useGetProductsQuery({ page });
+  const { data: apiData, isFetching, refetch } = useGetProductsQuery({ page });
+
+  const handleRefresh = async (options = {}) => {
+    if (options.hard) {
+      window.location.reload();
+      return;
+    }
+    setPage(1);
+    await refetch().unwrap().catch(() => {});
+    toast.success("Actualisé");
+  };
 
   const allProducts = apiData?.data || products; 
 
@@ -99,6 +109,7 @@ export default function App() {
     onBack: () => navigate("/products"), // For ProductDetail
     onDelete: handleDeleteProduct, // For ProductDetail
     onEdit: handleUpdateProduct, // For ProductDetail
+    onRefresh: handleRefresh,
   };
 
   return (

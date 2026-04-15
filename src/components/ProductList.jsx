@@ -10,7 +10,9 @@ import {
   X,
   ChevronDown,
   Receipt,
+  RefreshCw,
 } from "lucide-react";
+import { PullToRefresh } from "./ui/PullToRefresh";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -204,6 +206,15 @@ export function ProductList(props) {
         <div className="flex items-center justify-between mb-4 gap-2">
           <div className="w-10" />
           <button
+            className="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm transition-colors active:scale-95 flex items-center gap-2"
+            onClick={() => context.onRefresh()}
+          >
+            <RefreshCw
+              className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`}
+            />
+            Actualiser
+          </button>
+          <button
             className="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm transition-colors active:scale-95"
             onClick={() => navigate("/suppliers")}
           >
@@ -252,156 +263,158 @@ export function ProductList(props) {
         </div>
       </div>
 
-      {/* Product List */}
-      <div className="px-4 py-3 flex flex-col gap-3">
-        {filteredProducts.map((product) => (
-          <div
-            key={product.id}
-            onClick={() => onProductClick(product.id)}
-            className="bg-white rounded-2xl overflow-hidden shadow-sm active:scale-[0.98] transition-transform flex flex-row w-full"
-          >
-            {/* Image */}
-            <div className="relative w-24 h-24 shrink-0">
-              <img
-                src={
-                  Array.isArray(product.photo)
-                    ? product.photo[0] ||
-                      "https://via.placeholder.com/300?text=No+Image"
-                    : product.photo
-                }
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
+      <PullToRefresh onRefresh={context.onRefresh} isRefreshing={isFetching}>
+        {/* Product List */}
+        <div className="px-4 py-3 flex flex-col gap-3">
+          {filteredProducts.map((product) => (
+            <div
+              key={product.id}
+              onClick={() => onProductClick(product.id)}
+              className="bg-white rounded-2xl overflow-hidden shadow-sm active:scale-[0.98] transition-transform flex flex-row w-full"
+            >
+              {/* Image */}
+              <div className="relative w-24 h-24 shrink-0">
+                <img
+                  src={
+                    Array.isArray(product.photo)
+                      ? product.photo[0] ||
+                        "https://via.placeholder.com/300?text=No+Image"
+                      : product.photo
+                  }
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
 
-              {/* Selection overlay */}
-              <div
-                onClick={(e) => toggleSelect(product.id, e)}
-                className="absolute inset-0 z-10"
-              >
+                {/* Selection overlay */}
                 <div
-                  className={`absolute top-1.5 left-1.5 p-0.5 rounded-full transition-all ${
-                    selectedIds.includes(product.id)
-                      ? "bg-orange-600 text-white scale-110 shadow-lg"
-                      : "bg-white/80 text-gray-400 backdrop-blur-sm"
-                  }`}
+                  onClick={(e) => toggleSelect(product.id, e)}
+                  className="absolute inset-0 z-10"
                 >
-                  {selectedIds.includes(product.id) ? (
-                    <CheckCircle2 className="w-4 h-4" />
-                  ) : (
-                    <Circle className="w-4 h-4" />
-                  )}
+                  <div
+                    className={`absolute top-1.5 left-1.5 p-0.5 rounded-full transition-all ${
+                      selectedIds.includes(product.id)
+                        ? "bg-orange-600 text-white scale-110 shadow-lg"
+                        : "bg-white/80 text-gray-400 backdrop-blur-sm"
+                    }`}
+                  >
+                    {selectedIds.includes(product.id) ? (
+                      <CheckCircle2 className="w-4 h-4" />
+                    ) : (
+                      <Circle className="w-4 h-4" />
+                    )}
+                  </div>
                 </div>
+
+                {/* Carton badge */}
+                {product.packaging === "carton" && (
+                  <div className="absolute bottom-1.5 left-1.5 bg-orange-500 text-white p-1 rounded-md z-10">
+                    <Box className="w-3 h-3" />
+                  </div>
+                )}
               </div>
 
-              {/* Carton badge */}
-              {product.packaging === "carton" && (
-                <div className="absolute bottom-1.5 left-1.5 bg-orange-500 text-white p-1 rounded-md z-10">
-                  <Box className="w-3 h-3" />
-                </div>
-              )}
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 min-w-0 px-3 py-2.5 flex flex-col justify-between">
-              {/* Top row: name + type icon */}
-              <div className="flex items-start justify-between gap-1">
-                <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 leading-snug flex-1">
-                  {product.name}
-                </h3>
-                <span className="text-base shrink-0 ml-1">
-                  {typeIcons[product.type] || typeIcons.other}
-                </span>
-              </div>
-
-              {/* Supplier + Dépense button */}
-              <div className="flex items-center justify-between gap-1">
-                <span className="text-[11px] text-orange-700/90 font-medium bg-orange-50 px-2 py-0.5 rounded-md border border-orange-100 truncate max-w-[110px]">
-                  {product.supplier_name || "Sans fournisseur"}
-                </span>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setDepenseTarget({ id: product.id, name: product.name });
-                  }}
-                  className="flex items-center gap-1 bg-orange-100 text-orange-600 px-2 py-0.5 rounded-md border border-orange-200 text-[11px] font-semibold active:scale-95 transition shrink-0"
-                >
-                  <Receipt className="w-3 h-3" />
-                  Dépense
-                </button>
-              </div>
-
-              {/* Bottom row: price + totals */}
-              <div className="flex items-end justify-between gap-1 mt-1">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-base font-bold text-orange-600 leading-none">
-                    {product.price}
-                  </span>
-                  <span className="text-xs font-semibold text-orange-600/80">
-                    {product.currency}
+              {/* Content */}
+              <div className="flex-1 min-w-0 px-3 py-2.5 flex flex-col justify-between">
+                {/* Top row: name + type icon */}
+                <div className="flex items-start justify-between gap-1">
+                  <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 leading-snug flex-1">
+                    {product.name}
+                  </h3>
+                  <span className="text-base shrink-0 ml-1">
+                    {typeIcons[product.type] || typeIcons.other}
                   </span>
                 </div>
 
-                <div className="flex flex-wrap gap-1 justify-end">
-                  {product.total_bif > 0 && (
-                    <span className="bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded text-[10px] font-semibold whitespace-nowrap">
-                      {Number(product.total_bif).toLocaleString("fr-FR", {
-                        maximumFractionDigits: 0,
-                      })}{" "}
-                      BIF
+                {/* Supplier + Dépense button */}
+                <div className="flex items-center justify-between gap-1">
+                  <span className="text-[11px] text-orange-700/90 font-medium bg-orange-50 px-2 py-0.5 rounded-md border border-orange-100 truncate max-w-[110px]">
+                    {product.supplier_name || "Sans fournisseur"}
+                  </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDepenseTarget({ id: product.id, name: product.name });
+                    }}
+                    className="flex items-center gap-1 bg-orange-100 text-orange-600 px-2 py-0.5 rounded-md border border-orange-200 text-[11px] font-semibold active:scale-95 transition shrink-0"
+                  >
+                    <Receipt className="w-3 h-3" />
+                    Dépense
+                  </button>
+                </div>
+
+                {/* Bottom row: price + totals */}
+                <div className="flex items-end justify-between gap-1 mt-1">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-base font-bold text-orange-600 leading-none">
+                      {product.price}
                     </span>
-                  )}
-                  {product.total_usd > 0 && (
-                    <span className="bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded text-[10px] font-semibold whitespace-nowrap">
-                      {Number(product.total_usd).toLocaleString("fr-FR", {
-                        maximumFractionDigits: 2,
-                      })}{" "}
-                      USD
+                    <span className="text-xs font-semibold text-orange-600/80">
+                      {product.currency}
                     </span>
-                  )}
-                  {product.total_rmb > 0 && (
-                    <span className="bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded text-[10px] font-semibold whitespace-nowrap">
-                      {Number(product.total_rmb).toLocaleString("fr-FR", {
-                        maximumFractionDigits: 2,
-                      })}{" "}
-                      RMB
-                    </span>
-                  )}
-                  {product.packaging === "carton" &&
-                    product.numberOfCartons && (
-                      <span className="text-[10px] text-gray-500 flex items-center gap-0.5 font-medium bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">
-                        <Package className="w-3 h-3 text-gray-400" />
-                        {product.numberOfCartons} ctn ·{" "}
-                        {product.unit_per_package ||
-                          product.pieces_per_carton ||
-                          "?"}
-                        /ctn
+                  </div>
+
+                  <div className="flex flex-wrap gap-1 justify-end">
+                    {product.total_bif > 0 && (
+                      <span className="bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded text-[10px] font-semibold whitespace-nowrap">
+                        {Number(product.total_bif).toLocaleString("fr-FR", {
+                          maximumFractionDigits: 0,
+                        })}{" "}
+                        BIF
                       </span>
                     )}
+                    {product.total_usd > 0 && (
+                      <span className="bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded text-[10px] font-semibold whitespace-nowrap">
+                        {Number(product.total_usd).toLocaleString("fr-FR", {
+                          maximumFractionDigits: 2,
+                        })}{" "}
+                        USD
+                      </span>
+                    )}
+                    {product.total_rmb > 0 && (
+                      <span className="bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded text-[10px] font-semibold whitespace-nowrap">
+                        {Number(product.total_rmb).toLocaleString("fr-FR", {
+                          maximumFractionDigits: 2,
+                        })}{" "}
+                        RMB
+                      </span>
+                    )}
+                    {product.packaging === "carton" &&
+                      product.numberOfCartons && (
+                        <span className="text-[10px] text-gray-500 flex items-center gap-0.5 font-medium bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">
+                          <Package className="w-3 h-3 text-gray-400" />
+                          {product.numberOfCartons} ctn ·{" "}
+                          {product.unit_per_package ||
+                            product.pieces_per_carton ||
+                            "?"}
+                          /ctn
+                        </span>
+                      )}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Infinite Scroll Sentinel / Loading Indicator */}
-      {(hasMore || isFetching) && (
-        <div ref={lastElementRef} className="py-4 text-center text-gray-500">
-          {isFetching ? "Chargement..." : "Charger plus de produits"}
+          ))}
         </div>
-      )}
 
-      {filteredProducts.length === 0 && (
-        <div className="text-center py-12 px-6">
-          <div className="bg-gray-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Filter className="w-10 h-10 text-gray-400" />
+        {/* Infinite Scroll Sentinel / Loading Indicator */}
+        {(hasMore || isFetching) && (
+          <div ref={lastElementRef} className="py-4 text-center text-gray-500">
+            {isFetching ? "Chargement..." : "Charger plus de produits"}
           </div>
-          <p className="text-gray-500">Aucun produit trouvé</p>
-          <p className="text-sm text-gray-400 mt-1">
-            Essayez de modifier vos filtres
-          </p>
-        </div>
-      )}
+        )}
+
+        {filteredProducts.length === 0 && (
+          <div className="text-center py-12 px-6">
+            <div className="bg-gray-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Filter className="w-10 h-10 text-gray-400" />
+            </div>
+            <p className="text-gray-500">Aucun produit trouvé</p>
+            <p className="text-sm text-gray-400 mt-1">
+              Essayez de modifier vos filtres
+            </p>
+          </div>
+        )}
+      </PullToRefresh>
       {/* Bulk Action Bar */}
       {isSelectionMode && (
         <div className="fixed bottom-24 left-4 right-4 bg-gray-900 text-white p-4 rounded-2xl shadow-2xl z-50 flex items-center justify-between animate-in slide-in-from-bottom duration-300">
