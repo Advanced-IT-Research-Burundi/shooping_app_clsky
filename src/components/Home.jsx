@@ -14,7 +14,11 @@ export function Home(props) {
   const onProductClick = props.onProductClick || context.onProductClick;
   const totalProducts = products.length;
   const totalValue = products.reduce((sum, p) => sum + p.convertedPrice, 0);
-  const onRefresh = props.onRefresh || context.onRefresh;
+  const onRefresh = () => {
+    props.onRefresh && props.onRefresh();
+    context.onRefresh && context.onRefresh();
+    window.location.reload();
+  };
   return (
     // add refresh button
     <div className="min-h-screen bg-gray-50">
