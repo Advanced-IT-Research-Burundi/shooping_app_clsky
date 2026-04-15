@@ -250,15 +250,16 @@ export function ProductList(props) {
         </div>
       </div>
 
-      {/* Product Grid */}
-      <div className="p-6 grid grid-cols-2 gap-4">
+      {/* Product List */}
+      <div className="px-4 py-3 flex flex-col gap-3">
         {filteredProducts.map((product) => (
           <div
             key={product.id}
             onClick={() => onProductClick(product.id)}
-            className="bg-white rounded-2xl overflow-hidden shadow-sm active:scale-95 transition-transform"
+            className="bg-white rounded-2xl overflow-hidden shadow-sm active:scale-[0.98] transition-transform flex flex-row w-full"
           >
-            <div className="relative aspect-square">
+            {/* Image */}
+            <div className="relative w-24 h-24 shrink-0">
               <img
                 src={
                   Array.isArray(product.photo)
@@ -270,55 +271,100 @@ export function ProductList(props) {
                 className="w-full h-full object-cover"
               />
 
-              {/* Selection Overlay */}
+              {/* Selection overlay */}
               <div
                 onClick={(e) => toggleSelect(product.id, e)}
-                className="absolute inset-0 z-1 group-hover:bg-black/5 transition-colors"
+                className="absolute inset-0 z-10"
               >
                 <div
-                  className={`absolute top-2 left-2 p-1 z-1 rounded-full transition-all ${
+                  className={`absolute top-1.5 left-1.5 p-0.5 rounded-full transition-all ${
                     selectedIds.includes(product.id)
                       ? "bg-orange-600 text-white scale-110 shadow-lg"
-                      : "bg-white/80 text-gray-400 opacity-0 group-hover:opacity-100 backdrop-blur-sm"
+                      : "bg-white/80 text-gray-400 backdrop-blur-sm"
                   }`}
                 >
                   {selectedIds.includes(product.id) ? (
-                    <CheckCircle2 className="w-5 h-5" />
+                    <CheckCircle2 className="w-4 h-4" />
                   ) : (
-                    <Circle className="w-5 h-5" />
+                    <Circle className="w-4 h-4" />
                   )}
                 </div>
               </div>
 
-              <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs z-1">
-                {typeIcons[product.type] || typeIcons.other}
-              </div>
+              {/* Carton badge */}
               {product.packaging === "carton" && (
-                <div className="absolute bottom-2 left-2 bg-orange-500 text-white p-1.5 rounded-lg z-10">
-                  <Box className="w-4 h-4" />
+                <div className="absolute bottom-1.5 left-1.5 bg-orange-500 text-white p-1 rounded-md z-10">
+                  <Box className="w-3 h-3" />
                 </div>
               )}
             </div>
-            <div className="p-3">
-              <h3 className="text-sm text-gray-900 truncate mb-1">
-                {product.name}
-              </h3>
-              <div className="text-orange-600 mb-1">
-                {product.price} {product.currency}
-              </div>
-              <div className="text-xs text-orange-600/70 mt-1 flex items-center gap-1 font-medium bg-orange-50 w-fit px-2 py-0.5 rounded-md">
-                <span className="truncate">
-                  {product.supplier_name || "Sans fournisseur"}
+
+            {/* Content */}
+            <div className="flex-1 min-w-0 px-3 py-2.5 flex flex-col justify-between">
+              {/* Top row: name + type icon */}
+              <div className="flex items-start justify-between gap-1">
+                <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 leading-snug flex-1">
+                  {product.name}
+                </h3>
+                <span className="text-base shrink-0 ml-1">
+                  {typeIcons[product.type] || typeIcons.other}
                 </span>
               </div>
-              {product.packaging === "carton" && product.numberOfCartons && (
-                <div className="text-xs text-gray-500 mt-2 flex items-center gap-1">
-                  <Package className="w-3 h-3" />
-                  {product.numberOfCartons} cartons (
-                  {product.unit_per_package || product.pieces_per_carton || "?"}{" "}
-                  unités/carton)
+
+              {/* Supplier */}
+              <span className="text-[11px] text-orange-700/90 font-medium bg-orange-50 px-2 py-0.5 rounded-md border border-orange-100 self-start truncate max-w-[140px]">
+                {product.supplier_name || "Sans fournisseur"}
+              </span>
+
+              {/* Bottom row: price + totals */}
+              <div className="flex items-end justify-between gap-1 mt-1">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-base font-bold text-orange-600 leading-none">
+                    {product.price}
+                  </span>
+                  <span className="text-xs font-semibold text-orange-600/80">
+                    {product.currency}
+                  </span>
                 </div>
-              )}
+
+                <div className="flex flex-wrap gap-1 justify-end">
+                  {product.total_bif > 0 && (
+                    <span className="bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded text-[10px] font-semibold whitespace-nowrap">
+                      {Number(product.total_bif).toLocaleString("fr-FR", {
+                        maximumFractionDigits: 0,
+                      })}{" "}
+                      BIF
+                    </span>
+                  )}
+                  {product.total_usd > 0 && (
+                    <span className="bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded text-[10px] font-semibold whitespace-nowrap">
+                      {Number(product.total_usd).toLocaleString("fr-FR", {
+                        maximumFractionDigits: 2,
+                      })}{" "}
+                      USD
+                    </span>
+                  )}
+                  {product.total_rmb > 0 && (
+                    <span className="bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded text-[10px] font-semibold whitespace-nowrap">
+                      {Number(product.total_rmb).toLocaleString("fr-FR", {
+                        maximumFractionDigits: 2,
+                      })}{" "}
+                      RMB
+                    </span>
+                  )}
+                  {product.packaging === "carton" &&
+                    product.numberOfCartons && (
+                      <span className="text-[10px] text-gray-500 flex items-center gap-0.5 font-medium bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">
+                        <Package className="w-3 h-3 text-gray-400" />
+                        {product.numberOfCartons} ctn ·{" "}
+                        {product.unit_per_package ||
+                          product.pieces_per_carton ||
+                          "?"}
+                        /ctn
+                      </span>
+                    )}
+                </div>
+              </div>
             </div>
           </div>
         ))}

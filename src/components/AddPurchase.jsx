@@ -219,6 +219,9 @@ export function AddPurchase(props) {
       formData.append("cbm", cbm || 0);
       formData.append("currency", currency); // Keep for legacy/info if needed
       formData.append("exchange_rate", effectiveExchangeRate);
+      formData.append("total_bif", totalBIF.toFixed(0));
+      formData.append("total_usd", totalUSD.toFixed(2));
+      formData.append("total_rmb", totalRMB.toFixed(2));
       formData.append("type", type);
       formData.append("packaging", packaging);
       // Add default status and quantity if needed
@@ -384,6 +387,26 @@ export function AddPurchase(props) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm text-gray-700 mb-2 block">
+                Devise *
+              </label>
+              <div className="relative">
+                <select
+                  value={deviseId}
+                  onChange={(e) => handleDeviseChange(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 appearance-none bg-white"
+                >
+                  {[{ id: "", code: "--" }, ...(devisesList || [])].map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.code}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="w-5 h-5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm text-gray-700 mb-2 block">
                 Prix d'achat *
               </label>
               <input
@@ -394,26 +417,6 @@ export function AddPurchase(props) {
                 placeholder="0.00"
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
-            </div>
-
-            <div>
-              <label className="text-sm text-gray-700 mb-2 block">
-                Devise *
-              </label>
-              <div className="relative">
-                <select
-                  value={deviseId}
-                  onChange={(e) => handleDeviseChange(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 appearance-none bg-white"
-                >
-                  {(devisesList || []).map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.code}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="w-5 h-5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
             </div>
           </div>
 
