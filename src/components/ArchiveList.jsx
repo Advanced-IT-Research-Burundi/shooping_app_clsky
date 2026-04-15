@@ -12,6 +12,7 @@ import {
   Box,
   RefreshCw,
 } from "lucide-react";
+import { PullToRefresh } from "./ui/PullToRefresh";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -144,119 +145,79 @@ function ContainerProductsView({ containerId, containerName, onBack }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-4 sticky top-0 z-30">
-        <div className="flex items-center justify-between mb-1">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onBack}
-              className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition"
-            >
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
-            </button>
-            <div>
-              <h2 className="text-lg font-bold text-gray-900">
-                {containerName}
-              </h2>
-              <p className="text-xs text-gray-400">
-                {products.length} produit{products.length !== 1 ? "s" : ""}
-              </p>
+    <div>
+      <PullToRefresh onRefresh={() => refetch()} isRefreshing={isFetching}>
+        {isFetching ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="w-8 h-8 border-4 border-orange-400 border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : products.length === 0 ? (
+          <div className="text-center py-20 px-6">
+            <div className="bg-gray-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Archive className="w-10 h-10 text-gray-300" />
             </div>
+            <p className="text-gray-500">Ce conteneur est vide</p>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => refetch()}
-              disabled={isFetching}
-              className={`p-2 hover:bg-gray-100 rounded-full transition ${isFetching ? "animate-spin" : ""}`}
-            >
-              <RefreshCw className="w-5 h-5 text-gray-500" />
-            </button>
-            {isSelectionMode && (
-              <button
-                onClick={selectAll}
-                className="text-sm text-orange-600 font-medium"
+        ) : (
+          <div className="p-4 grid grid-cols-2 gap-3">
+            {products.map((product) => (
+              <div
+                key={product.id}
+                onClick={() => navigate(`/product/${product.id}`)}
+                className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 active:scale-95 transition-transform group relative"
               >
-                {selectedIds.length === products.length
-                  ? "Désélectionner"
-                  : "Tout sélectionner"}
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {isFetching ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="w-8 h-8 border-4 border-orange-400 border-t-transparent rounded-full animate-spin" />
-        </div>
-      ) : products.length === 0 ? (
-        <div className="text-center py-20 px-6">
-          <div className="bg-gray-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Archive className="w-10 h-10 text-gray-300" />
-          </div>
-          <p className="text-gray-500">Ce conteneur est vide</p>
-        </div>
-      ) : (
-        <div className="p-4 grid grid-cols-2 gap-3">
-          {products.map((product) => (
-            <div
-              key={product.id}
-              onClick={() => navigate(`/product/${product.id}`)}
-              className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 active:scale-95 transition-transform group relative"
-            >
-              <div className="relative aspect-square">
-                <img
-                  src={
-                    Array.isArray(product.photo)
-                      ? product.photo[0] ||
-                        "https://via.placeholder.com/300?text=No+Image"
-                      : product.photo ||
-                        "https://via.placeholder.com/300?text=No+Image"
-                  }
-                  alt={product.name}
-                  className="w-full h-full object-cover grayscale-[0.4]"
-                />
-                {/* Selection */}
-                <div
-                  onClick={(e) => toggleSelect(product.id, e)}
-                  className="absolute inset-0 z-20"
-                >
+                <div className="relative aspect-square">
+                  <img
+                    src={
+                      Array.isArray(product.photo)
+                        ? product.photo[0] ||
+                          "https://via.placeholder.com/300?text=No+Image"
+                        : product.photo ||
+                          "https://via.placeholder.com/300?text=No+Image"
+                    }
+                    alt={product.name}
+                    className="w-full h-full object-cover grayscale-[0.4]"
+                  />
+                  {/* Selection */}
                   <div
-                    className={`absolute top-2 left-2 p-1 rounded-full transition-all ${
-                      selectedIds.includes(product.id)
-                        ? "bg-orange-600 text-white scale-110 shadow-lg"
-                        : "bg-white/80 text-gray-400 opacity-0 group-hover:opacity-100"
-                    }`}
+                    onClick={(e) => toggleSelect(product.id, e)}
+                    className="absolute inset-0 z-20"
                   >
-                    {selectedIds.includes(product.id) ? (
-                      <CheckCircle2 className="w-5 h-5" />
-                    ) : (
-                      <Circle className="w-5 h-5" />
-                    )}
+                    <div
+                      className={`absolute top-2 left-2 p-1 rounded-full transition-all ${
+                        selectedIds.includes(product.id)
+                          ? "bg-orange-600 text-white scale-110 shadow-lg"
+                          : "bg-white/80 text-gray-400 opacity-0 group-hover:opacity-100"
+                      }`}
+                    >
+                      {selectedIds.includes(product.id) ? (
+                        <CheckCircle2 className="w-5 h-5" />
+                      ) : (
+                        <Circle className="w-5 h-5" />
+                      )}
+                    </div>
+                  </div>
+                  <div className="absolute bottom-2 right-2 bg-gray-900/60 text-white text-[10px] px-2 py-0.5 rounded backdrop-blur-sm">
+                    ARCHIVÉ
                   </div>
                 </div>
-                <div className="absolute bottom-2 right-2 bg-gray-900/60 text-white text-[10px] px-2 py-0.5 rounded backdrop-blur-sm">
-                  ARCHIVÉ
+                <div className="p-3">
+                  <h3 className="text-sm font-medium text-gray-900 truncate">
+                    {product.name}
+                  </h3>
+                  <p className="text-orange-600 text-sm font-bold mt-0.5">
+                    {product.price} {product.currency}
+                  </p>
+                  <p className="text-[10px] text-gray-400 mt-1 truncate">
+                    {product.supplier_name || "Sans fournisseur"}
+                  </p>
                 </div>
               </div>
-              <div className="p-3">
-                <h3 className="text-sm font-medium text-gray-900 truncate">
-                  {product.name}
-                </h3>
-                <p className="text-orange-600 text-sm font-bold mt-0.5">
-                  {product.price} {product.currency}
-                </p>
-                <p className="text-[10px] text-gray-400 mt-1 truncate">
-                  {product.supplier_name || "Sans fournisseur"}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </PullToRefresh>
 
-      {/* Bulk Action Bar */}
       {isSelectionMode && (
         <div className="fixed bottom-6 left-4 right-4 bg-gray-900 text-white p-4 rounded-2xl shadow-2xl z-50 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -405,34 +366,36 @@ export function ArchiveList() {
         </div>
       </div>
 
-      {/* Content */}
-      {isFetching ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="w-8 h-8 border-4 border-orange-400 border-t-transparent rounded-full animate-spin" />
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="text-center py-20 px-6">
-          <div className="bg-gray-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Archive className="w-12 h-12 text-gray-300" />
+      <PullToRefresh onRefresh={() => refetch()} isRefreshing={isFetching}>
+        {/* Content */}
+        {isFetching ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="w-8 h-8 border-4 border-orange-400 border-t-transparent rounded-full animate-spin" />
           </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">
-            Aucun conteneur
-          </h2>
-          <p className="text-gray-500 text-sm">
-            Les produits archivés seront regroupés dans des conteneurs.
-          </p>
-        </div>
-      ) : (
-        <div className="p-4 space-y-3">
-          {filtered.map((container) => (
-            <ContainerCard
-              key={container.id}
-              container={container}
-              onClick={() => setSelectedContainer(container)}
-            />
-          ))}
-        </div>
-      )}
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-20 px-6">
+            <div className="bg-gray-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Archive className="w-12 h-12 text-gray-300" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">
+              Aucun conteneur
+            </h2>
+            <p className="text-gray-500 text-sm">
+              Les produits archivés seront regroupés dans des conteneurs.
+            </p>
+          </div>
+        ) : (
+          <div className="p-4 space-y-3">
+            {filtered.map((container) => (
+              <ContainerCard
+                key={container.id}
+                container={container}
+                onClick={() => setSelectedContainer(container)}
+              />
+            ))}
+          </div>
+        )}
+      </PullToRefresh>
     </div>
   );
 }

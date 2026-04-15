@@ -1,4 +1,10 @@
-import { Plus, ShoppingBag, DollarSign, Package } from "lucide-react";
+import {
+  Plus,
+  ShoppingBag,
+  DollarSign,
+  Package,
+  RefreshCw,
+} from "lucide-react";
 import { useOutletContext } from "react-router-dom";
 
 export function Home(props) {
@@ -8,12 +14,20 @@ export function Home(props) {
   const onProductClick = props.onProductClick || context.onProductClick;
   const totalProducts = products.length;
   const totalValue = products.reduce((sum, p) => sum + p.convertedPrice, 0);
+  const onRefresh = props.onRefresh || context.onRefresh;
   return (
+    // add refresh button
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="px-6 pt-12 pb-8 text-gray-900 bg-orange-500 shadow-sm">
-        <div className="flex flex-col items-center mb-6">
+        <div className="flex flex-row items-center justify-between mb-6">
           <h1 className="text-3xl font-bold text-white">Eden Mart</h1>
+          <button
+            onClick={onRefresh}
+            className="flex items-right gap-2 px-4 py-2 text-white bg-orange-600 rounded-lg hover:bg-orange-700"
+          >
+            <RefreshCw className="w-5 h-5" />
+          </button>
         </div>
         <p className="text-center text-white">Gérez vos produits facilement</p>
       </div>
