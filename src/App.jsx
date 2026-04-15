@@ -19,6 +19,41 @@ export default function App() {
   // Profile expects 'user' object.
   const user = useSelector((state) => state.auth.user);
 
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isAppInstalled, setIsAppInstalled] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstall = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    const handleAppInstalled = () => {
+      setDeferredPrompt(null);
+      setIsAppInstalled(true);
+      toast.success("Application installée avec succès !");
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstall);
+    window.addEventListener("appinstalled", handleAppInstalled);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+      window.removeEventListener("appinstalled", handleAppInstalled);
+    };
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (!deferredPrompt) return;
+    
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    if (outcome === "accepted") {
+      setDeferredPrompt(null);
+    }
+  };
+
   const handleLogout = () => {
     dispatch(logout());
     navigate("/login");
@@ -110,6 +145,8 @@ export default function App() {
     onDelete: handleDeleteProduct, // For ProductDetail
     onEdit: handleUpdateProduct, // For ProductDetail
     onRefresh: handleRefresh,
+    deferredPrompt,
+    onInstallApp: handleInstallApp,
   };
 
   return (

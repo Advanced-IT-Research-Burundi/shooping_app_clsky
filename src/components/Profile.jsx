@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Shield,
   FileText,
+  Download,
 } from "lucide-react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 
@@ -15,6 +16,7 @@ export function Profile(props) {
   const user = props.user || context.user;
   const onLogout = props.onLogout || context.onLogout;
   const navigate = useNavigate();
+  const { deferredPrompt, onInstallApp } = context;
 
   // Default values if user is null
   const displayName = user?.name || "Commerçant";
@@ -81,6 +83,18 @@ export function Profile(props) {
             iconColor="text-orange-600"
             onClick={() => navigate("/archive")}
           />
+          {deferredPrompt && (
+            <>
+              <Divider />
+              <MenuItem
+                icon={<Download className="w-5 h-5" />}
+                label="Installer l'application"
+                iconBg="bg-indigo-100"
+                iconColor="text-indigo-600"
+                onClick={onInstallApp}
+              />
+            </>
+          )}
         </div>
 
         {/* Help Group */}

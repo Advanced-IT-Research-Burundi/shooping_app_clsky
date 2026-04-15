@@ -243,22 +243,22 @@ export function AddPurchase(props) {
           formData.append("number_of_cartons", numberOfCartons);
       }
 
-      const result = await addProduct(formData).unwrap();
+      // Initiate upload in background
+      addProduct(formData).unwrap()
+        .then((result) => {
+          sessionStorage.removeItem(STORAGE_KEY);
+          toast.success("Produit ajouté avec succès !");
+        })
+        .catch((err) => {
+          console.error("Background upload failed:", err);
+          toast.error("Échec de l'ajout du produit. Veuillez réessayer.");
+        });
 
-      // On success, clear storage and navigate
-      sessionStorage.removeItem(STORAGE_KEY);
-      if (onSuccessNavigate) onSuccessNavigate(result);
+      // Navigate away immediately to prevent loss of time
+      if (onSuccessNavigate) onSuccessNavigate();
     } catch (err) {
       console.error("Submission error:", err);
-      if (err.data && err.data.errors) {
-        // Laravel-style validation errors: { field: ['error1', 'error2'] }
-        const messages = Object.values(err.data.errors).flat();
-        setFormErrors(messages);
-      } else if (err.data && err.data.message) {
-        setFormErrors([err.data.message]);
-      } else {
-        setFormErrors(["Une erreur est survenue lors de l'enregistrement."]);
-      }
+      setFormErrors(["Une erreur est survenue lors de l'envoi."]);
     }
   };
 
