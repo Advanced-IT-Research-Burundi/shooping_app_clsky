@@ -18,19 +18,19 @@ jobs:
           port: ${{secrets.SSH_PORT}}
           script: |
             cd ${{secrets.WORK_DIR}}
+            # On passe le mot de passe à sudo pour donner les droits d'écriture au dossier
+            echo "${{secrets.SSH_PASSWORD}}" | sudo -S chown -R $USER:$USER ${{secrets.WORK_DIR}}
+            
             git config --global --add safe.directory ${{secrets.WORK_DIR}}
             git reset --hard HEAD
             git clean -fd
             git checkout ${{secrets.MAIN_BRANCH}}
             git pull origin ${{secrets.MAIN_BRANCH}}
             
-            # 1. S'assurer que l'utilisateur est propriétaire du dossier avant d'installer/build
-            sudo chown -R $USER:$USER .
-            
             npm install
             
-            # 2. Supprimer l'ancien dossier build s'il existe pour repartir de zéro
-            rm -rf build/
+            # On s'assure que le dossier build est supprimé proprement avant de reconstruire
+            echo "${{secrets.SSH_PASSWORD}}" | sudo -S rm -rf build/
             
             npm run build
             echo "Deployed successfully at $(date)" >> deploy.log
