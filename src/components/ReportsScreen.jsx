@@ -60,8 +60,9 @@ function groupTotal(items) {
 const PRINT_CSS = `
 @media print {
   @page { margin: 12mm; size: A4 landscape; }
-  body > *:not(#print-root) { display: none !important; }
-  #print-root { display: block !important; }
+  body * { visibility: hidden; }
+  #print-root, #print-root * { visibility: visible; }
+  #print-root { position: absolute; left: 0; top: 0; width: 100%; display: block !important; }
   .no-print { display: none !important; }
   body { font-family: Arial, sans-serif; font-size: 11px; }
   table { width: 100%; border-collapse: collapse; margin-bottom: 14px; page-break-inside: auto; }
@@ -581,16 +582,16 @@ export function ReportsScreen() {
           <button
             onClick={handleExcelExport}
             className="flex items-center gap-1.5 bg-green-600 text-white px-3 py-2 rounded-xl text-sm font-medium"
+            title="excel"
           >
             <FileSpreadsheet className="w-4 h-4" />
-            Excel
           </button>
           <button
             onClick={handlePrint}
             className="flex items-center gap-1.5 bg-orange-600 text-white px-3 py-2 rounded-xl text-sm font-medium"
           >
             <Printer className="w-4 h-4" />
-            Imprimer
+            print
           </button>
         </div>
       </div>
