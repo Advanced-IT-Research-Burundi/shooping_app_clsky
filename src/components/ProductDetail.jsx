@@ -148,6 +148,9 @@ export function ProductDetail(props) {
           ? new Date(product.date).toISOString().split("T")[0]
           : new Date().toISOString().split("T")[0],
         category_id: currentCategory.id,
+        type: product.type || "other",
+        rmbToUsd: 7.15,
+        usdToBif: 7500,
         devise_id: currentDevise.id,
         unit_per_package:
           product.unit_per_package || product.piecesPerCarton || "",
@@ -252,6 +255,38 @@ export function ProductDetail(props) {
 
   const handleSaveEdit = async () => {
     try {
+      const DEFAULT_RMB_TO_USD = 7.15;
+      const DEFAULT_USD_TO_BIF = 7500;
+      const currentRmbToUsd = parseFloat(editForm.rmbToUsd) || DEFAULT_RMB_TO_USD;
+      const currentUsdToBif = parseFloat(editForm.usdToBif) || DEFAULT_USD_TO_BIF;
+      const priceVal = parseFloat(editForm.price) || 0;
+      const selectedDevise = (devisesList || []).find(
+        (d) => d.id.toString() === editForm.devise_id?.toString()
+      );
+      const currencyStr = selectedDevise?.code || "";
+
+      let totalBIF = 0;
+      let totalUSD = 0;
+      let totalRMB = 0;
+      let effectiveExchangeRate = 1;
+
+      if (currencyStr === "RMB") {
+        totalRMB = priceVal;
+        totalUSD = priceVal / currentRmbToUsd;
+        totalBIF = totalUSD * currentUsdToBif;
+        effectiveExchangeRate = currentUsdToBif / currentRmbToUsd;
+      } else if (currencyStr === "USD") {
+        totalUSD = priceVal;
+        totalBIF = priceVal * currentUsdToBif;
+        totalRMB = priceVal * currentRmbToUsd;
+        effectiveExchangeRate = currentUsdToBif;
+      } else if (currencyStr === "BIF") {
+        totalBIF = priceVal;
+        totalUSD = priceVal / currentUsdToBif;
+        totalRMB = totalUSD * currentRmbToUsd;
+        effectiveExchangeRate = 1;
+      }
+
       const formData = new FormData();
       formData.append("_method", "PUT"); // Trick for Laravel resource handling
       formData.append("name", editForm.name);
@@ -259,11 +294,13 @@ export function ProductDetail(props) {
       formData.append("price", editForm.price);
       formData.append("quantity", editForm.quantity);
       formData.append("packaging", editForm.packaging);
-      formData.append("exchange_rate", editForm.exchange_rate);
+      formData.append("exchange_rate", effectiveExchangeRate);
+      formData.append("total_bif", totalBIF.toFixed(0));
+      formData.append("total_usd", totalUSD.toFixed(2));
+      formData.append("total_rmb", totalRMB.toFixed(2));
       formData.append("date", editForm.date);
       formData.append("category_id", editForm.category_id);
-      formData.append("date", editForm.date);
-      formData.append("category_id", editForm.category_id);
+      formData.append("type", editForm.type);
       formData.append("devise_id", editForm.devise_id);
       if (editForm.supplier_id)
         formData.append("supplier_id", editForm.supplier_id);
@@ -320,6 +357,37 @@ export function ProductDetail(props) {
     categories.find((c) => c.value === product.type) || categories[3];
 
   if (isEditing && editForm) {
+    const DEFAULT_RMB_TO_USD = 7.15;
+    const DEFAULT_USD_TO_BIF = 7500;
+    const currentRmbToUsd = parseFloat(editForm.rmbToUsd) || DEFAULT_RMB_TO_USD;
+    const currentUsdToBif = parseFloat(editForm.usdToBif) || DEFAULT_USD_TO_BIF;
+    const priceVal = parseFloat(editForm.price) || 0;
+    
+    const selectedDevise = (devisesList || []).find(
+      (d) => d.id.toString() === editForm.devise_id?.toString()
+    );
+    const currencyStr = selectedDevise?.code || "";
+
+    let totalBIF = 0;
+    let totalUSD = 0;
+    let totalRMB = 0;
+
+    if (currencyStr === "RMB") {
+      totalRMB = priceVal;
+      totalUSD = priceVal / currentRmbToUsd;
+      totalBIF = totalUSD * currentUsdToBif;
+    } else if (currencyStr === "USD") {
+      totalUSD = priceVal;
+      totalBIF = priceVal * currentUsdToBif;
+      totalRMB = priceVal * currentRmbToUsd;
+    } else if (currencyStr === "BIF") {
+      totalBIF = priceVal;
+      totalUSD = priceVal / currentUsdToBif;
+      totalRMB = totalUSD * currentRmbToUsd;
+    }
+
+    const currencies = devisesList ? devisesList.map(d => d.code) : [];
+
     return (
       <div className="min-h-screen bg-gray-50 pb-20">
         {/* Header */}
@@ -420,42 +488,6 @@ export function ProductDetail(props) {
               />
             </div>
             <div>
-              <label className="text-sm text-gray-700 mb-2 block">
-                Taux de change
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={editForm.exchange_rate}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, exchange_rate: e.target.value })
-                }
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-          </div>
-
-          {/* Category & Devise */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm text-gray-700 mb-2 block">
-                Catégorie
-              </label>
-              <select
-                value={editForm.category_id}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, category_id: e.target.value })
-                }
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
-              >
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
               <label className="text-sm text-gray-700 mb-2 block">Devise</label>
               <select
                 value={editForm.devise_id}
@@ -470,6 +502,69 @@ export function ProductDetail(props) {
                   </option>
                 ))}
               </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm text-gray-700 mb-2 block">
+                Taux (1 USD en RMB)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={editForm.rmbToUsd}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, rmbToUsd: e.target.value })
+                }
+                placeholder="7.15"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-gray-700 mb-2 block">
+                Taux (1 USD en BIF)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={editForm.usdToBif}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, usdToBif: e.target.value })
+                }
+                placeholder="7500"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+            </div>
+          </div>
+
+          {/* Product Type */}
+          <div className="space-y-3">
+            <label className="text-sm text-gray-700">Type de produit</label>
+            <div className="grid grid-cols-2 gap-3">
+              {categories.map((pt) => (
+                <button
+                  key={pt.value}
+                  type="button"
+                  onClick={() =>
+                    setEditForm({ ...editForm, type: pt.value, category_id: pt.id })
+                  }
+                  className={`p-4 rounded-2xl border-2 transition-all ${
+                    editForm.type === pt.value
+                      ? "border-orange-500 bg-orange-50"
+                      : "border-gray-200 bg-white"
+                  }`}
+                >
+                  <div className="text-3xl mb-1">{pt.icon}</div>
+                  <div
+                    className={`text-sm ${
+                      editForm.type === pt.value ? "text-orange-600" : "text-gray-700"
+                    }`}
+                  >
+                    {pt.label}
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
 
@@ -525,6 +620,50 @@ export function ProductDetail(props) {
                 </select>
                 <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
+            </div>
+          </div>
+
+          <div className="bg-orange-50 rounded-2xl p-4 border border-orange-100 flex flex-col gap-3">
+            <div className="text-sm text-gray-600 font-medium">
+              Récapitulatif des conversions (Estimation)
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {currencies.includes("BIF") && (
+                <div className="bg-white/50 p-2 rounded-xl">
+                  <div className="text-[10px] text-gray-500 uppercase font-bold">
+                    BIF
+                  </div>
+                  <div className="text-sm font-bold text-orange-600">
+                    {totalBIF.toLocaleString("fr-FR", {
+                      maximumFractionDigits: 0,
+                    })}
+                  </div>
+                </div>
+              )}
+              {currencies.includes("USD") && (
+                <div className="bg-white/50 p-2 rounded-xl">
+                  <div className="text-[10px] text-gray-500 uppercase font-bold">
+                    USD
+                  </div>
+                  <div className="text-sm font-bold text-orange-600">
+                    {totalUSD.toLocaleString("fr-FR", {
+                      maximumFractionDigits: 2,
+                    })}
+                  </div>
+                </div>
+              )}
+              {currencies.includes("RMB") && (
+                <div className="bg-white/50 p-2 rounded-xl">
+                  <div className="text-[10px] text-gray-500 uppercase font-bold">
+                    RMB
+                  </div>
+                  <div className="text-sm font-bold text-orange-600">
+                    {totalRMB.toLocaleString("fr-FR", {
+                      maximumFractionDigits: 2,
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
