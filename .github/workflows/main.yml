@@ -20,14 +20,19 @@ jobs:
           port: ${{secrets.SSH_PORT}}
           script: |
             cd ${{secrets.WORK_DIR}}
-            git config pull.rebase true
-            # Mettre à jour la branche distante avec rebase en utilisant le token GitHub
-            git reset --hard HEAD
-            git clean -f -d
-            git stash
-            git checkout ${{secrets.MAIN_BRANCH}}
             git config --global --add safe.directory ${{secrets.WORK_DIR}}
+            git reset --hard HEAD
+            git clean -fd
+            git checkout ${{secrets.MAIN_BRANCH}}
             git pull origin ${{secrets.MAIN_BRANCH}}
-            echo "Deployed successfully" >> deploy.log
+            
+            # 1. S'assurer que l'utilisateur est propriétaire du dossier avant d'installer/build
+            sudo chown -R $USER:$USER .
+            
             npm install
+            
+            # 2. Supprimer l'ancien dossier build s'il existe pour repartir de zéro
+            rm -rf build/
+            
             npm run build
+            echo "Deployed successfully at $(date)" >> deploy.log
